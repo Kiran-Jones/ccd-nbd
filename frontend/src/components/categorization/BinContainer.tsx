@@ -19,8 +19,12 @@ interface Props {
   totalBullets: number;
   onBinsChange: (bins: Bin[]) => void;
   onUncategorizedChange: (bullets: BulletPoint[]) => void;
+  onTotalChange: (total: number) => void;
   onComplete: () => void;
 }
+
+// Helper to check if a bullet is a duplicate
+const isDuplicate = (bulletId: string) => bulletId.includes('-dup-');
 
 export default function BinContainer({
   bins,
@@ -28,6 +32,7 @@ export default function BinContainer({
   totalBullets,
   onBinsChange,
   onUncategorizedChange,
+  onTotalChange,
   onComplete,
 }: Props) {
   const [activeBullet, setActiveBullet] = useState<BulletPoint | null>(null);
@@ -83,6 +88,13 @@ export default function BinContainer({
       id: `${bullet.id}-dup-${Date.now()}`,
     };
     onUncategorizedChange([...uncategorized, newBullet]);
+    onTotalChange(totalBullets + 1);
+  };
+
+  const handleDeleteDuplicate = (bulletId: string) => {
+    if (!isDuplicate(bulletId)) return;
+    onUncategorizedChange(uncategorized.filter((b) => b.id !== bulletId));
+    onTotalChange(totalBullets - 1);
   };
 
   const categorizedCount = bins.reduce((sum, bin) => sum + bin.bullets.length, 0);
@@ -101,6 +113,7 @@ export default function BinContainer({
             bullets={uncategorized}
             totalBullets={totalBullets}
             onDuplicate={handleDuplicate}
+            onDeleteDuplicate={handleDeleteDuplicate}
           />
         </div>
 

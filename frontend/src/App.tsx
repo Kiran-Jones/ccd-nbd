@@ -26,9 +26,11 @@ function App() {
   );
   const [totalBullets, setTotalBullets] = useState(0);
   const [exporting, setExporting] = useState<'json' | 'pdf' | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
-  const handleFileUploaded = (extractedBullets: BulletPoint[]) => {
+  const handleFileUploaded = (extractedBullets: BulletPoint[], file: File) => {
     setBullets(extractedBullets);
+    setUploadedFile(file);
     setPhase('preview');
   };
 
@@ -140,6 +142,7 @@ function App() {
     setBins(BINS.map((config) => ({ ...config, bullets: [] })));
     setAnalysisResult(null);
     setTotalBullets(0);
+    setUploadedFile(null);
   };
 
   // Step indicator for visual progress
@@ -155,15 +158,32 @@ function App() {
     <div className="min-h-screen bg-[#F5F5F5] flex flex-col">
       {/* Header */}
       <header className="bg-[#00693E] text-white">
-        <div className="max-w-6xl mx-auto px-6 py-6">
+        <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="font-serif text-2xl md:text-3xl">
-                Career Design Resume Analyzer
-              </h1>
-              <p className="text-white/80 text-sm mt-1">
-                Discover your professional identity through your experiences
-              </p>
+            <div className="flex items-center gap-4">
+              <a
+                href="https://careerdesign.dartmouth.edu/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-shrink-0"
+              >
+                <img
+                  src="/DCCD-Logo.png"
+                  alt="Dartmouth Center for Career Design"
+                  className="h-12 md:h-14"
+                />
+              </a>
+              <button
+                onClick={handleReset}
+                className="hidden sm:block text-left hover:opacity-80 transition-opacity"
+              >
+                <h1 className="font-serif text-xl md:text-2xl">
+                  Resume Analyzer
+                </h1>
+                <p className="text-white/80 text-xs mt-0.5">
+                  Discover your professional identity
+                </p>
+              </button>
             </div>
             {phase !== 'upload' && (
               <Button
@@ -222,7 +242,7 @@ function App() {
 
       {/* Main Content */}
       <main className="flex-1 py-12">
-        <div className="max-w-6xl mx-auto px-6">
+        <div className={`mx-auto px-6 ${phase === 'preview' ? 'max-w-7xl' : 'max-w-6xl'}`}>
           {/* Phase Title */}
           {phase === 'upload' && (
             <div className="text-center mb-12">
@@ -241,6 +261,10 @@ function App() {
               <h2 className="font-serif text-3xl text-[#262626] mb-3">
                 Review Your Experiences
               </h2>
+              <p className="text-[#525252] max-w-2xl mx-auto">
+                Compare your original resume with the extracted experiences. Edit
+                or add items as needed.
+              </p>
             </div>
           )}
 
@@ -275,6 +299,7 @@ function App() {
           {phase === 'preview' && (
             <BulletPreview
               bullets={bullets}
+              file={uploadedFile}
               onConfirm={handlePreviewConfirmed}
               onBack={() => setPhase('upload')}
             />
@@ -287,6 +312,7 @@ function App() {
               totalBullets={totalBullets}
               onBinsChange={setBins}
               onUncategorizedChange={setUncategorized}
+              onTotalChange={setTotalBullets}
               onComplete={handleCategorizationComplete}
             />
           )}
@@ -335,10 +361,13 @@ function App() {
         <div className="max-w-6xl mx-auto px-6 py-6">
           <div className="text-center">
             <p className="text-sm">
-              Career Design Resume Analyzer
+              Dartmouth Center for Career Design
             </p>
             <p className="text-xs text-white/60 mt-1">
               A tool for exploring your professional identity through self-reflection
+            </p>
+            <p className="text-xs text-white/50 mt-3">
+              Copyright © 2026 Dartmouth College
             </p>
           </div>
         </div>

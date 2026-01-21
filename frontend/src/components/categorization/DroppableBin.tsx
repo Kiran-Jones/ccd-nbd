@@ -18,7 +18,7 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
     <div
       ref={setNodeRef}
       className={`
-        rounded-md min-h-[180px] transition-all duration-200
+        rounded-md transition-all duration-200
         border-2
         ${isOver ? 'ring-2 ring-offset-2' : ''}
       `}
@@ -55,33 +55,35 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
       </div>
 
       {/* Bullets */}
-      <div className="p-3 space-y-2">
+      <div className="p-3 h-[140px] overflow-y-auto">
         {bin.bullets.length === 0 ? (
           <div
-            className="py-8 text-center border-2 border-dashed rounded"
+            className="h-full flex items-center justify-center border-2 border-dashed rounded"
             style={{ borderColor: '#D4D4D4' }}
           >
             <p className="text-sm text-[#A3A3A3]">Drop items here</p>
           </div>
         ) : (
-          bin.bullets.map((bullet) => (
-            <div
-              key={bullet.id}
-              className="flex items-start gap-2 p-2.5 bg-white rounded border border-[#E5E5E5] group"
-            >
-              <p className="flex-1 text-sm text-[#404040] leading-relaxed">
-                {bullet.text}
-              </p>
-              <button
-                onClick={() => onRemoveBullet(bullet.id)}
-                className="p-1 text-[#A3A3A3] hover:text-[#9D162E] hover:bg-[#FFEBEE] rounded opacity-0 group-hover:opacity-100 transition-all"
-                title="Remove from this category"
-                aria-label="Remove from this category"
+          <div className="space-y-2">
+            {bin.bullets.map((bullet) => (
+              <div
+                key={bullet.id}
+                className="flex items-start gap-2 p-2.5 bg-white rounded border border-[#E5E5E5] group"
               >
-                <X size={14} />
-              </button>
-            </div>
-          ))
+                <p className="flex-1 text-sm text-[#404040] leading-relaxed">
+                  {bullet.text}
+                </p>
+                <button
+                  onClick={() => onRemoveBullet(bullet.id)}
+                  className="p-1 text-[#A3A3A3] hover:text-[#9D162E] hover:bg-[#FFEBEE] rounded opacity-0 group-hover:opacity-100 transition-all"
+                  title="Remove from this category"
+                  aria-label="Remove from this category"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

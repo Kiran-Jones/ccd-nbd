@@ -1,14 +1,15 @@
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { Copy, GripVertical } from 'lucide-react';
+import { Copy, Trash2 } from 'lucide-react';
 import { BulletPoint } from '../../types/BulletPoint';
 
 interface Props {
   bullet: BulletPoint;
   onDuplicate?: () => void;
+  onDelete?: () => void;
 }
 
-export default function DraggableBullet({ bullet, onDuplicate }: Props) {
+export default function DraggableBullet({ bullet, onDuplicate, onDelete }: Props) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: bullet.id,
@@ -45,38 +46,51 @@ export default function DraggableBullet({ bullet, onDuplicate }: Props) {
     <div
       ref={setNodeRef}
       style={style}
+      {...listeners}
+      {...attributes}
       className={`
         bg-white border border-[#E5E5E5] rounded p-3
-        transition-all duration-200
+        transition-all duration-200 cursor-grab active:cursor-grabbing
         ${isDragging ? 'opacity-50 shadow-lg z-50' : 'hover:border-[#D4D4D4] hover:shadow-sm'}
       `}
     >
       <div className="flex items-start gap-3">
-        <button
-          {...listeners}
-          {...attributes}
-          className="text-[#A3A3A3] hover:text-[#737373] cursor-grab active:cursor-grabbing mt-0.5 transition-colors"
-          aria-label="Drag to categorize"
-        >
-          <GripVertical size={16} />
-        </button>
         <p className="flex-1 text-sm text-[#404040] leading-relaxed">
           {renderFormattedText()}
         </p>
 
-        {onDuplicate && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDuplicate();
-            }}
-            className="p-1.5 text-[#A3A3A3] hover:text-[#00693E] hover:bg-[#F5F5F5] rounded transition-colors"
-            title="Create a copy"
-            aria-label="Create a copy of this item"
-          >
-            <Copy size={14} />
-          </button>
-        )}
+        <div className="flex items-center gap-1">
+          {onDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onDelete();
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="p-1.5 text-[#A3A3A3] hover:text-[#9D162E] hover:bg-[#FFEBEE] rounded transition-colors"
+              title="Delete duplicate"
+              aria-label="Delete this duplicate"
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
+          {onDuplicate && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onDuplicate();
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="p-1.5 text-[#A3A3A3] hover:text-[#00693E] hover:bg-[#F5F5F5] rounded transition-colors"
+              title="Create a copy"
+              aria-label="Create a copy of this item"
+            >
+              <Copy size={14} />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

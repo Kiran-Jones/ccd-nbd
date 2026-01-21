@@ -5,7 +5,7 @@ import { BulletPoint } from '../../types/BulletPoint';
 import { parseResume } from '../../services/api';
 
 interface Props {
-  onFileUploaded: (bullets: BulletPoint[]) => void;
+  onFileUploaded: (bullets: BulletPoint[], file: File) => void;
 }
 
 export default function FileUpload({ onFileUploaded }: Props) {
@@ -22,7 +22,7 @@ export default function FileUpload({ onFileUploaded }: Props) {
 
       try {
         const bullets = await parseResume(file);
-        onFileUploaded(bullets);
+        onFileUploaded(bullets, file);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Upload failed');
       } finally {

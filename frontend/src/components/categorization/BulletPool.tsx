@@ -6,9 +6,13 @@ interface Props {
   bullets: BulletPoint[];
   totalBullets: number;
   onDuplicate: (bullet: BulletPoint) => void;
+  onDeleteDuplicate: (bulletId: string) => void;
 }
 
-export default function BulletPool({ bullets, totalBullets, onDuplicate }: Props) {
+// Helper to check if a bullet is a duplicate
+const isDuplicate = (bulletId: string) => bulletId.includes('-dup-');
+
+export default function BulletPool({ bullets, totalBullets, onDuplicate, onDeleteDuplicate }: Props) {
   const categorized = totalBullets - bullets.length;
 
   return (
@@ -56,6 +60,7 @@ export default function BulletPool({ bullets, totalBullets, onDuplicate }: Props
                 key={bullet.id}
                 bullet={bullet}
                 onDuplicate={() => onDuplicate(bullet)}
+                onDelete={isDuplicate(bullet.id) ? () => onDeleteDuplicate(bullet.id) : undefined}
               />
             ))
           )}
