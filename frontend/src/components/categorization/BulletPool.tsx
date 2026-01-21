@@ -1,6 +1,5 @@
 import { BulletPoint } from '../../types/BulletPoint';
 import DraggableBullet from './DraggableBullet';
-import ProgressIndicator from '../common/ProgressIndicator';
 
 interface Props {
   bullets: BulletPoint[];
@@ -12,67 +11,89 @@ interface Props {
 // Helper to check if a bullet is a duplicate
 const isDuplicate = (bulletId: string) => bulletId.includes('-dup-');
 
-export default function BulletPool({ bullets, totalBullets, onDuplicate, onDeleteDuplicate }: Props) {
-  const categorized = totalBullets - bullets.length;
+export default function BulletPool({ bullets, onDuplicate, onDeleteDuplicate }: Props) {
+  const topBullet = bullets[0];
+  const remainingCount = bullets.length - 1;
 
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-md h-full">
+    <div className="flex flex-col items-center">
       {/* Header */}
-      <div className="px-6 py-5 border-b border-[#E5E5E5]">
-        <h3 className="font-serif text-xl text-[#262626] mb-4">
-          Your Experiences
-        </h3>
-        <ProgressIndicator
-          current={categorized}
-          total={totalBullets}
-          label="Categorized"
-        />
-      </div>
+      <h3 className="font-serif text-xl text-[#262626] mb-4 text-center">
+        Your Experiences
+      </h3>
 
-      {/* Bullet list */}
-      <div className="p-6">
-        <div className="space-y-3 max-h-[calc(100vh-380px)] overflow-y-auto pr-2">
-          {bullets.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[#E8F5E9] flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-[#00693E]"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
-              <p className="text-[#404040] font-medium">All done!</p>
-              <p className="text-sm text-[#737373] mt-1">
-                Every experience has been categorized.
-              </p>
+      {/* Stack container */}
+      <div className="relative w-full max-w-md">
+        {bullets.length === 0 ? (
+          <div className="text-center py-12 bg-white border border-[#E5E5E5] rounded-md">
+            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[#E8F5E9] flex items-center justify-center">
+              <svg
+                className="w-6 h-6 text-[#00693E]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
             </div>
-          ) : (
-            bullets.map((bullet) => (
-              <DraggableBullet
-                key={bullet.id}
-                bullet={bullet}
-                onDuplicate={() => onDuplicate(bullet)}
-                onDelete={isDuplicate(bullet.id) ? () => onDeleteDuplicate(bullet.id) : undefined}
+            <p className="text-[#404040] font-medium">All done!</p>
+            <p className="text-sm text-[#737373] mt-1">
+              Every experience has been categorized.
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Stack effect layers (behind the top card) */}
+            {remainingCount >= 2 && (
+              <div
+                className="absolute inset-0 bg-white border border-[#E5E5E5] rounded-md"
+                style={{
+                  transform: 'translateY(8px) scale(0.96)',
+                  zIndex: 0,
+                }}
               />
-            ))
-          )}
-        </div>
+            )}
+            {remainingCount >= 1 && (
+              <div
+                className="absolute inset-0 bg-white border border-[#E5E5E5] rounded-md"
+                style={{
+                  transform: 'translateY(4px) scale(0.98)',
+                  zIndex: 1,
+                }}
+              />
+            )}
 
-        {bullets.length > 0 && (
-          <p className="text-sm text-[#737373] mt-6 leading-relaxed">
-            Drag each item to a category on the right. Use the copy button to
-            place an item in multiple categories.
-          </p>
+            {/* Top card - the draggable bullet */}
+            <div className="relative z-10">
+              <DraggableBullet
+                key={topBullet.id}
+                bullet={topBullet}
+                onDuplicate={() => onDuplicate(topBullet)}
+                onDelete={isDuplicate(topBullet.id) ? () => onDeleteDuplicate(topBullet.id) : undefined}
+              />
+            </div>
+
+            {/* Remaining count indicator */}
+            {remainingCount > 0 && (
+              <p className="text-xs text-[#737373] text-center mt-4">
+                {remainingCount} more {remainingCount === 1 ? 'experience' : 'experiences'} remaining
+              </p>
+            )}
+          </>
         )}
       </div>
+
+      {/* Instructions */}
+      {bullets.length > 0 && (
+        <p className="text-sm text-[#737373] mt-6 leading-relaxed text-center max-w-sm">
+          Drag to a category corner. Use the copy button to place in multiple categories.
+        </p>
+      )}
     </div>
   );
 }

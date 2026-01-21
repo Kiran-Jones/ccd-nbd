@@ -100,59 +100,105 @@ export default function BinContainer({
   const categorizedCount = bins.reduce((sum, bin) => sum + bin.bullets.length, 0);
   const canComplete = categorizedCount > 0;
 
+  // Get bins by position: interests (top-left), skillset (top-right), values (bottom-left), strengths (bottom-right)
+  const getBinByPosition = (position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right') => {
+    const binIds = {
+      'top-left': 'interests',
+      'top-right': 'skillset',
+      'bottom-left': 'values',
+      'bottom-right': 'strengths',
+    };
+    const binId = binIds[position];
+    const bin = bins.find((b) => b.id === binId)!;
+    const config = BINS.find((c) => c.id === binId)!;
+    return { bin, config };
+  };
+
   return (
     <DndContext
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left: Bullet Pool */}
-        <div className="lg:col-span-1">
-          <BulletPool
-            bullets={uncategorized}
-            totalBullets={totalBullets}
-            onDuplicate={handleDuplicate}
-            onDeleteDuplicate={handleDeleteDuplicate}
-          />
-        </div>
+      {/* Header with View Summary button */}
+      <div className="flex justify-center mb-6">
+        <Button onClick={onComplete} disabled={!canComplete}>
+          View Summary
+        </Button>
+      </div>
 
-        {/* Right: Categories */}
-        <div className="lg:col-span-2">
-          <div className="bg-white border border-[#E5E5E5] rounded-md">
-            {/* Header */}
-            <div className="px-6 py-5 border-b border-[#E5E5E5] flex items-center justify-between">
-              <div>
-                <h3 className="font-serif text-xl text-[#262626]">
-                  Categories
-                </h3>
-                <p className="text-sm text-[#737373] mt-1">
-                  Organize your experiences into meaningful groups
-                </p>
-              </div>
-              <Button onClick={onComplete} disabled={!canComplete}>
-                View Summary
-              </Button>
-            </div>
+      {/* Diamond Layout Container */}
+      <div className="relative">
+        {/* Grid layout for corners and center */}
+        <div className="grid grid-cols-3 gap-4 lg:gap-6 items-start">
+          {/* Top Row */}
+          <div className="w-full max-w-[280px]">
+            {/* Top-left: Interests */}
+            {(() => {
+              const { bin, config } = getBinByPosition('top-left');
+              return (
+                <DroppableBin
+                  bin={bin}
+                  config={config}
+                  onRemoveBullet={(bulletId) => handleRemoveBullet(bin.id, bulletId)}
+                />
+              );
+            })()}
+          </div>
+          <div>{/* Empty center top */}</div>
+          <div className="w-full max-w-[280px] justify-self-end">
+            {/* Top-right: Skill Set */}
+            {(() => {
+              const { bin, config } = getBinByPosition('top-right');
+              return (
+                <DroppableBin
+                  bin={bin}
+                  config={config}
+                  onRemoveBullet={(bulletId) => handleRemoveBullet(bin.id, bulletId)}
+                />
+              );
+            })()}
+          </div>
 
-            {/* Bins Grid */}
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {bins.map((bin) => {
-                  const config = BINS.find((c) => c.id === bin.id)!;
-                  return (
-                    <DroppableBin
-                      key={bin.id}
-                      bin={bin}
-                      config={config}
-                      onRemoveBullet={(bulletId) =>
-                        handleRemoveBullet(bin.id, bulletId)
-                      }
-                    />
-                  );
-                })}
-              </div>
-            </div>
+          {/* Middle Row - Center Stack */}
+          <div>{/* Empty left */}</div>
+          <div className="justify-self-center py-6 lg:py-10 w-full">
+            <BulletPool
+              bullets={uncategorized}
+              totalBullets={totalBullets}
+              onDuplicate={handleDuplicate}
+              onDeleteDuplicate={handleDeleteDuplicate}
+            />
+          </div>
+          <div>{/* Empty right */}</div>
+
+          {/* Bottom Row */}
+          <div className="w-full max-w-[280px]">
+            {/* Bottom-left: Values */}
+            {(() => {
+              const { bin, config } = getBinByPosition('bottom-left');
+              return (
+                <DroppableBin
+                  bin={bin}
+                  config={config}
+                  onRemoveBullet={(bulletId) => handleRemoveBullet(bin.id, bulletId)}
+                />
+              );
+            })()}
+          </div>
+          <div>{/* Empty center bottom */}</div>
+          <div className="w-full max-w-[280px] justify-self-end">
+            {/* Bottom-right: Strengths */}
+            {(() => {
+              const { bin, config } = getBinByPosition('bottom-right');
+              return (
+                <DroppableBin
+                  bin={bin}
+                  config={config}
+                  onRemoveBullet={(bulletId) => handleRemoveBullet(bin.id, bulletId)}
+                />
+              );
+            })()}
           </div>
         </div>
       </div>
