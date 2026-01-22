@@ -28,7 +28,7 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => Math.min(bin.bullets.length - 1, prev + 1));
+    setCurrentIndex((prev) => Math.min(totalBullets - 1, prev + 1));
   };
 
   const handleRemove = (bulletId: string) => {
@@ -45,6 +45,8 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
       className={`
         rounded-lg transition-all duration-200
         border-2
+        flex flex-col
+        h-[260px] md:h-[280px]
         ${isOver ? 'ring-2 ring-offset-2 scale-105' : ''}
       `}
       style={{
@@ -81,7 +83,7 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
       </div>
 
       {/* Bullets - Stack View */}
-      <div className="p-3 min-h-[120px]">
+      <div className="p-3 flex-1 min-h-0">
         {bin.bullets.length === 0 ? (
           <div
             className="h-full min-h-[96px] flex items-center justify-center border-2 border-dashed rounded-md"
@@ -92,23 +94,23 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
             </p>
           </div>
         ) : (
-          <div className="relative">
+          <div className="relative h-full pl-3 pb-3 flex flex-col">
             {/* Stack effect layers */}
-            {totalBullets - safeIndex >= 3 && (
+            {totalBullets >= 3 && (
               <div
                 className="absolute inset-0 bg-white rounded border"
                 style={{
-                  transform: 'translateY(6px) scale(0.96)',
+                  transform: 'translate(-12px, 12px)',
                   borderColor: `${config.color}30`,
                   zIndex: 0,
                 }}
               />
             )}
-            {totalBullets - safeIndex >= 2 && (
+            {totalBullets >= 2 && (
               <div
                 className="absolute inset-0 bg-white rounded border"
                 style={{
-                  transform: 'translateY(3px) scale(0.98)',
+                  transform: 'translate(-6px, 6px)',
                   borderColor: `${config.color}30`,
                   zIndex: 1,
                 }}
@@ -117,12 +119,14 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
 
             {/* Top card */}
             <div
-              className="relative z-10 flex items-start gap-2 p-2.5 bg-white rounded border group"
+              className="relative z-10 flex items-start gap-2 p-2.5 bg-white rounded border group flex-1 min-h-0"
               style={{ borderColor: `${config.color}40` }}
             >
-              <p className="flex-1 text-sm text-[#404040] leading-relaxed">
+              <div className="flex-1 min-h-0">
+                <p className="text-sm text-[#404040] leading-relaxed max-h-full overflow-y-auto pr-1">
                 {topBullet.text}
-              </p>
+                </p>
+              </div>
               <button
                 onClick={() => handleRemove(topBullet.id)}
                 className="p-1 text-[#A3A3A3] hover:text-[#9D162E] hover:bg-[#FFEBEE] rounded transition-all"

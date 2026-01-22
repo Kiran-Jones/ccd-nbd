@@ -61,7 +61,7 @@ export default function BinContainer({
 
     const updatedBins = bins.map((bin) =>
       bin.id === targetBinId
-        ? { ...bin, bullets: [...bin.bullets, bullet] }
+        ? { ...bin, bullets: [bullet, ...bin.bullets] }
         : bin
     );
     onBinsChange(updatedBins);
@@ -121,7 +121,7 @@ export default function BinContainer({
       onDragEnd={handleDragEnd}
     >
       {/* Header with View Summary button */}
-      <div className="flex justify-center mb-6">
+      <div className="flex justify-center mb-3">
         <Button onClick={onComplete} disabled={!canComplete}>
           View Summary
         </Button>
@@ -130,9 +130,10 @@ export default function BinContainer({
       {/* Diamond Layout Container */}
       <div className="relative">
         {/* Grid layout for corners and center */}
-        <div className="grid grid-cols-3 gap-4 lg:gap-6 items-start">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-x-3 gap-y-2 lg:gap-x-4 lg:gap-y-2 items-start">
           {/* Top Row */}
-          <div className="w-full max-w-[280px]">
+          <div className="w-full max-w-[340px] justify-self-center mt-8">
             {/* Top-left: Interests */}
             {(() => {
               const { bin, config } = getBinByPosition('top-left');
@@ -146,7 +147,7 @@ export default function BinContainer({
             })()}
           </div>
           <div>{/* Empty center top */}</div>
-          <div className="w-full max-w-[280px] justify-self-end">
+          <div className="w-full max-w-[340px] justify-self-center mt-8">
             {/* Top-right: Skill Set */}
             {(() => {
               const { bin, config } = getBinByPosition('top-right');
@@ -162,10 +163,9 @@ export default function BinContainer({
 
           {/* Middle Row - Center Stack */}
           <div>{/* Empty left */}</div>
-          <div className="justify-self-center py-6 lg:py-10 w-full">
+          <div className="justify-self-center py-1 lg:py-2 w-full">
             <BulletPool
               bullets={uncategorized}
-              totalBullets={totalBullets}
               onDuplicate={handleDuplicate}
               onDeleteDuplicate={handleDeleteDuplicate}
             />
@@ -173,7 +173,7 @@ export default function BinContainer({
           <div>{/* Empty right */}</div>
 
           {/* Bottom Row */}
-          <div className="w-full max-w-[280px]">
+          <div className="w-full max-w-[340px] justify-self-center -mt-8">
             {/* Bottom-left: Values */}
             {(() => {
               const { bin, config } = getBinByPosition('bottom-left');
@@ -187,7 +187,7 @@ export default function BinContainer({
             })()}
           </div>
           <div>{/* Empty center bottom */}</div>
-          <div className="w-full max-w-[280px] justify-self-end">
+          <div className="w-full max-w-[340px] justify-self-center -mt-8">
             {/* Bottom-right: Strengths */}
             {(() => {
               const { bin, config } = getBinByPosition('bottom-right');
@@ -199,6 +199,7 @@ export default function BinContainer({
                 />
               );
             })()}
+          </div>
           </div>
         </div>
       </div>

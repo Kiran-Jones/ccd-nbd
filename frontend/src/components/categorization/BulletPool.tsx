@@ -3,7 +3,6 @@ import DraggableBullet from './DraggableBullet';
 
 interface Props {
   bullets: BulletPoint[];
-  totalBullets: number;
   onDuplicate: (bullet: BulletPoint) => void;
   onDeleteDuplicate: (bulletId: string) => void;
 }
@@ -14,16 +13,17 @@ const isDuplicate = (bulletId: string) => bulletId.includes('-dup-');
 export default function BulletPool({ bullets, onDuplicate, onDeleteDuplicate }: Props) {
   const topBullet = bullets[0];
   const remainingCount = bullets.length - 1;
+  const totalBullets = bullets.length;
 
   return (
     <div className="flex flex-col items-center">
       {/* Header */}
-      <h3 className="font-serif text-xl text-[#262626] mb-4 text-center">
+      <h3 className="font-serif text-xl text-[#262626] mb-2 text-center">
         Your Experiences
       </h3>
 
       {/* Stack container */}
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-sm pl-4 pb-4">
         {bullets.length === 0 ? (
           <div className="text-center py-12 bg-white border border-[#E5E5E5] rounded-md">
             <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[#E8F5E9] flex items-center justify-center">
@@ -49,20 +49,20 @@ export default function BulletPool({ bullets, onDuplicate, onDeleteDuplicate }: 
         ) : (
           <>
             {/* Stack effect layers (behind the top card) */}
-            {remainingCount >= 2 && (
+            {totalBullets >= 3 && (
               <div
                 className="absolute inset-0 bg-white border border-[#E5E5E5] rounded-md"
                 style={{
-                  transform: 'translateY(8px) scale(0.96)',
+                  transform: 'translate(-12px, 12px)',
                   zIndex: 0,
                 }}
               />
             )}
-            {remainingCount >= 1 && (
+            {totalBullets >= 2 && (
               <div
                 className="absolute inset-0 bg-white border border-[#E5E5E5] rounded-md"
                 style={{
-                  transform: 'translateY(4px) scale(0.98)',
+                  transform: 'translate(-6px, 6px)',
                   zIndex: 1,
                 }}
               />
@@ -80,7 +80,7 @@ export default function BulletPool({ bullets, onDuplicate, onDeleteDuplicate }: 
 
             {/* Remaining count indicator */}
             {remainingCount > 0 && (
-              <p className="text-xs text-[#737373] text-center mt-4">
+              <p className="text-xs text-[#737373] text-center mt-2">
                 {remainingCount} more {remainingCount === 1 ? 'experience' : 'experiences'} remaining
               </p>
             )}
@@ -90,7 +90,7 @@ export default function BulletPool({ bullets, onDuplicate, onDeleteDuplicate }: 
 
       {/* Instructions */}
       {bullets.length > 0 && (
-        <p className="text-sm text-[#737373] mt-6 leading-relaxed text-center max-w-sm">
+        <p className="text-sm text-[#737373] mt-3 leading-relaxed text-center max-w-sm">
           Drag to a category corner. Use the copy button to place in multiple categories.
         </p>
       )}

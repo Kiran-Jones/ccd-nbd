@@ -241,7 +241,7 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 py-12">
+      <main className={`flex-1 ${phase === 'categorize' ? 'py-6' : 'py-12'}`}>
         <div className={`mx-auto px-6 ${phase === 'preview' ? 'max-w-7xl' : 'max-w-6xl'}`}>
           {/* Phase Title */}
           {phase === 'upload' && (
@@ -269,7 +269,7 @@ function App() {
           )}
 
           {phase === 'categorize' && (
-            <div className="text-center mb-8">
+            <div className="text-center mb-4">
               <h2 className="font-serif text-3xl text-[#262626] mb-3">
                 Categorize Your Experiences
               </h2>
