@@ -1,6 +1,6 @@
 import { useDroppable } from '@dnd-kit/core';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Bin } from '../../types/Bin';
 import { BinConfig } from '../../config/bins';
 
@@ -16,8 +16,8 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
   });
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isOverflowing, setIsOverflowing] = useState(false);
-  const textRef = useRef<HTMLParagraphElement>(null);
+  const [scrollState, setScrollState] = useState({ canScrollUp: false, canScrollDown: false });
+  const textRef = useRef<HTMLDivElement>(null);
 
   // Keep index in bounds when bullets change
   const safeIndex = Math.min(currentIndex, Math.max(0, bin.bullets.length - 1));
@@ -25,12 +25,21 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
   const totalBullets = bin.bullets.length;
   const hasMultiple = totalBullets > 1;
 
-  // Check if text is overflowing
-  useEffect(() => {
+  // Check scroll state
+  const updateScrollState = useCallback(() => {
     if (textRef.current) {
-      setIsOverflowing(textRef.current.scrollHeight > textRef.current.clientHeight);
+      const { scrollTop, scrollHeight, clientHeight } = textRef.current;
+      setScrollState({
+        canScrollUp: scrollTop > 0,
+        canScrollDown: scrollTop + clientHeight < scrollHeight - 1,
+      });
     }
-  }, [topBullet?.text, safeIndex]);
+  }, []);
+
+  // Update scroll state when content changes
+  useEffect(() => {
+    updateScrollState();
+  }, [topBullet?.text, safeIndex, updateScrollState]);
 
   const handlePrev = () => {
     setCurrentIndex((prev) => Math.max(0, prev - 1));
@@ -92,7 +101,7 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
       </div>
 
       {/* Bullets - Stack View */}
-      <div className="p-2 flex-1 min-h-0 overflow-hidden">
+      <div className="p-2 pb-3 pr-3 flex-1 min-h-0 overflow-visible">
         {bin.bullets.length === 0 ? (
           <div
             className="h-full flex items-center justify-center border-2 border-dashed rounded-md"
@@ -103,88 +112,108 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
             </p>
           </div>
         ) : (
-          <div className="relative h-full pt-2 pl-2 flex flex-col">
-            {/* Stack effect layers - visible behind the top card */}
-            {totalBullets >= 3 && (
-              <div
-                className="absolute bg-white rounded border shadow-sm"
-                style={{
-                  top: 0,
-                  left: 0,
-                  right: '8px',
-                  bottom: hasMultiple ? '28px' : '8px',
-                  transform: 'translate(-6px, -6px)',
-                  borderColor: `${config.color}25`,
-                  zIndex: 0,
-                }}
-              />
-            )}
-            {totalBullets >= 2 && (
-              <div
-                className="absolute bg-white rounded border shadow-sm"
-                style={{
-                  top: 0,
-                  left: 0,
-                  right: '8px',
-                  bottom: hasMultiple ? '28px' : '8px',
-                  transform: 'translate(-3px, -3px)',
-                  borderColor: `${config.color}30`,
-                  zIndex: 1,
-                }}
-              />
-            )}
-
-            {/* Top card */}
-            <div
-              className="relative z-10 flex flex-col bg-white rounded border flex-1 min-h-0 overflow-hidden"
-              style={{ borderColor: `${config.color}40` }}
-            >
-              {/* Card content */}
-              <div className="flex items-start gap-2 p-2.5 flex-1 min-h-0">
-                <div className="flex-1 min-h-0 overflow-hidden relative">
-                  <p
-                    ref={textRef}
-                    className="text-sm text-[#404040] leading-relaxed h-full overflow-y-auto pr-1"
-                  >
-                    {topBullet.text}
-                  </p>
-                  {/* Fade gradient for overflow indication */}
-                  {isOverflowing && (
-                    <div
-                      className="absolute bottom-0 left-0 right-2 h-6 pointer-events-none"
-                      style={{
-                        background: 'linear-gradient(transparent, white)',
-                      }}
-                    />
-                  )}
-                </div>
-                <button
-                  onClick={() => handleRemove(topBullet.id)}
-                  className="p-1.5 rounded transition-all flex-shrink-0 hover:scale-110"
+          <div className="relative h-full flex flex-col">
+            {/* Stack container with padding for stack offset */}
+            <div className="relative flex-1 min-h-0 mr-2 mb-2">
+              {/* Stack effect layers - peek out from bottom-right */}
+              {totalBullets >= 3 && (
+                <div
+                  className="absolute rounded border bg-white"
                   style={{
-                    color: `${config.color}80`,
-                    backgroundColor: 'transparent',
+                    top: '6px',
+                    left: '6px',
+                    right: '-6px',
+                    bottom: '-6px',
+                    borderColor: `${config.color}30`,
+                    zIndex: 0,
                   }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = '#9D162E';
-                    e.currentTarget.style.backgroundColor = '#FFEBEE';
+                />
+              )}
+              {totalBullets >= 2 && (
+                <div
+                  className="absolute rounded border bg-white"
+                  style={{
+                    top: '3px',
+                    left: '3px',
+                    right: '-3px',
+                    bottom: '-3px',
+                    borderColor: `${config.color}35`,
+                    zIndex: 1,
                   }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = `${config.color}80`;
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                  }}
-                  title="Remove from this category"
-                  aria-label="Remove from this category"
-                >
-                  <X size={16} />
-                </button>
+                />
+              )}
+
+              {/* Top card */}
+              <div
+                className="absolute inset-0 z-10 flex flex-col bg-white rounded border overflow-hidden"
+                style={{ borderColor: `${config.color}40` }}
+              >
+                {/* Card content */}
+                <div className="flex items-start gap-2 p-2.5 flex-1 min-h-0">
+                  <div className="flex-1 min-h-0 overflow-hidden relative">
+                    {/* Fade gradient at top when scrolled */}
+                    {scrollState.canScrollUp && (
+                      <div
+                        className="absolute top-0 left-0 right-2 h-4 pointer-events-none z-10"
+                        style={{
+                          background: 'linear-gradient(white, transparent)',
+                        }}
+                      />
+                    )}
+
+                    {/* Scrollable text container */}
+                    <div
+                      ref={textRef}
+                      onScroll={updateScrollState}
+                      className="h-full overflow-y-auto pr-1 scrollbar-thin"
+                      style={{
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: `${config.color}40 transparent`,
+                      }}
+                    >
+                      <p className="text-sm text-[#404040] leading-relaxed">
+                        {topBullet.text}
+                      </p>
+                    </div>
+
+                    {/* Fade gradient at bottom when more content */}
+                    {scrollState.canScrollDown && (
+                      <div
+                        className="absolute bottom-0 left-0 right-2 h-6 pointer-events-none z-10"
+                        style={{
+                          background: 'linear-gradient(transparent, white)',
+                        }}
+                      />
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleRemove(topBullet.id)}
+                    className="p-1.5 rounded transition-all flex-shrink-0 hover:scale-110"
+                    style={{
+                      color: `${config.color}80`,
+                      backgroundColor: 'transparent',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = '#9D162E';
+                      e.currentTarget.style.backgroundColor = '#FFEBEE';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = `${config.color}80`;
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
+                    title="Remove from this category"
+                    aria-label="Remove from this category"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Navigation for multiple items - always visible when multiple */}
             {hasMultiple && (
               <div
-                className="flex items-center justify-center gap-3 mt-1 py-1 rounded-md flex-shrink-0"
+                className="flex items-center justify-center gap-3 py-1 rounded-md flex-shrink-0 mt-auto"
                 style={{ backgroundColor: `${config.color}10` }}
               >
                 <button
