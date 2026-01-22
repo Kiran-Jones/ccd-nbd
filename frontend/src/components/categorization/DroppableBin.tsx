@@ -1,6 +1,6 @@
 import { useDroppable } from '@dnd-kit/core';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Bin } from '../../types/Bin';
 import { BinConfig } from '../../config/bins';
 
@@ -16,12 +16,21 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
   });
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const textRef = useRef<HTMLParagraphElement>(null);
 
   // Keep index in bounds when bullets change
   const safeIndex = Math.min(currentIndex, Math.max(0, bin.bullets.length - 1));
   const topBullet = bin.bullets[safeIndex];
   const totalBullets = bin.bullets.length;
   const hasMultiple = totalBullets > 1;
+
+  // Check if text is overflowing
+  useEffect(() => {
+    if (textRef.current) {
+      setIsOverflowing(textRef.current.scrollHeight > textRef.current.clientHeight);
+    }
+  }, [topBullet?.text, safeIndex]);
 
   const handlePrev = () => {
     setCurrentIndex((prev) => Math.max(0, prev - 1));
@@ -46,7 +55,7 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
         rounded-lg transition-all duration-200
         border-2
         flex flex-col
-        h-[260px] md:h-[280px]
+        h-[200px] md:h-[220px]
         ${isOver ? 'ring-2 ring-offset-2 scale-105' : ''}
       `}
       style={{
@@ -58,7 +67,7 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
     >
       {/* Header */}
       <div
-        className="px-4 py-3 rounded-t-md"
+        className="px-3 py-2 rounded-t-md flex-shrink-0"
         style={{
           backgroundColor: `${config.color}20`,
         }}
@@ -83,10 +92,10 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
       </div>
 
       {/* Bullets - Stack View */}
-      <div className="p-3 flex-1 min-h-0">
+      <div className="p-2 flex-1 min-h-0 overflow-hidden">
         {bin.bullets.length === 0 ? (
           <div
-            className="h-full min-h-[96px] flex items-center justify-center border-2 border-dashed rounded-md"
+            className="h-full flex items-center justify-center border-2 border-dashed rounded-md"
             style={{ borderColor: `${config.color}40` }}
           >
             <p className="text-sm" style={{ color: `${config.color}80` }}>
@@ -94,23 +103,31 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
             </p>
           </div>
         ) : (
-          <div className="relative h-full pl-3 pb-3 flex flex-col">
-            {/* Stack effect layers */}
+          <div className="relative h-full pt-2 pl-2 flex flex-col">
+            {/* Stack effect layers - visible behind the top card */}
             {totalBullets >= 3 && (
               <div
-                className="absolute inset-0 bg-white rounded border"
+                className="absolute bg-white rounded border shadow-sm"
                 style={{
-                  transform: 'translate(-12px, 12px)',
-                  borderColor: `${config.color}30`,
+                  top: 0,
+                  left: 0,
+                  right: '8px',
+                  bottom: hasMultiple ? '28px' : '8px',
+                  transform: 'translate(-6px, -6px)',
+                  borderColor: `${config.color}25`,
                   zIndex: 0,
                 }}
               />
             )}
             {totalBullets >= 2 && (
               <div
-                className="absolute inset-0 bg-white rounded border"
+                className="absolute bg-white rounded border shadow-sm"
                 style={{
-                  transform: 'translate(-6px, 6px)',
+                  top: 0,
+                  left: 0,
+                  right: '8px',
+                  bottom: hasMultiple ? '28px' : '8px',
+                  transform: 'translate(-3px, -3px)',
                   borderColor: `${config.color}30`,
                   zIndex: 1,
                 }}
@@ -119,47 +136,86 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
 
             {/* Top card */}
             <div
-              className="relative z-10 flex items-start gap-2 p-2.5 bg-white rounded border group flex-1 min-h-0"
+              className="relative z-10 flex flex-col bg-white rounded border flex-1 min-h-0 overflow-hidden"
               style={{ borderColor: `${config.color}40` }}
             >
-              <div className="flex-1 min-h-0">
-                <p className="text-sm text-[#404040] leading-relaxed max-h-full overflow-y-auto pr-1">
-                {topBullet.text}
-                </p>
+              {/* Card content */}
+              <div className="flex items-start gap-2 p-2.5 flex-1 min-h-0">
+                <div className="flex-1 min-h-0 overflow-hidden relative">
+                  <p
+                    ref={textRef}
+                    className="text-sm text-[#404040] leading-relaxed h-full overflow-y-auto pr-1"
+                  >
+                    {topBullet.text}
+                  </p>
+                  {/* Fade gradient for overflow indication */}
+                  {isOverflowing && (
+                    <div
+                      className="absolute bottom-0 left-0 right-2 h-6 pointer-events-none"
+                      style={{
+                        background: 'linear-gradient(transparent, white)',
+                      }}
+                    />
+                  )}
+                </div>
+                <button
+                  onClick={() => handleRemove(topBullet.id)}
+                  className="p-1.5 rounded transition-all flex-shrink-0 hover:scale-110"
+                  style={{
+                    color: `${config.color}80`,
+                    backgroundColor: 'transparent',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#9D162E';
+                    e.currentTarget.style.backgroundColor = '#FFEBEE';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = `${config.color}80`;
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                  title="Remove from this category"
+                  aria-label="Remove from this category"
+                >
+                  <X size={16} />
+                </button>
               </div>
-              <button
-                onClick={() => handleRemove(topBullet.id)}
-                className="p-1 text-[#A3A3A3] hover:text-[#9D162E] hover:bg-[#FFEBEE] rounded transition-all"
-                title="Remove from this category"
-                aria-label="Remove from this category"
-              >
-                <X size={14} />
-              </button>
             </div>
 
-            {/* Navigation for multiple items */}
+            {/* Navigation for multiple items - always visible when multiple */}
             {hasMultiple && (
-              <div className="flex items-center justify-center gap-2 mt-3">
+              <div
+                className="flex items-center justify-center gap-3 mt-1 py-1 rounded-md flex-shrink-0"
+                style={{ backgroundColor: `${config.color}10` }}
+              >
                 <button
                   onClick={handlePrev}
                   disabled={safeIndex === 0}
-                  className="p-1 rounded hover:bg-white/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  style={{ color: config.color }}
+                  className="p-1 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:scale-110"
+                  style={{
+                    color: config.color,
+                    backgroundColor: safeIndex === 0 ? 'transparent' : `${config.color}20`,
+                  }}
                   aria-label="Previous item"
                 >
-                  <ChevronLeft size={16} />
+                  <ChevronLeft size={18} />
                 </button>
-                <span className="text-xs" style={{ color: config.color }}>
+                <span
+                  className="text-xs font-medium min-w-[40px] text-center"
+                  style={{ color: config.color }}
+                >
                   {safeIndex + 1} / {totalBullets}
                 </span>
                 <button
                   onClick={handleNext}
                   disabled={safeIndex === totalBullets - 1}
-                  className="p-1 rounded hover:bg-white/50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  style={{ color: config.color }}
+                  className="p-1 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:scale-110"
+                  style={{
+                    color: config.color,
+                    backgroundColor: safeIndex === totalBullets - 1 ? 'transparent' : `${config.color}20`,
+                  }}
                   aria-label="Next item"
                 >
-                  <ChevronRight size={16} />
+                  <ChevronRight size={18} />
                 </button>
               </div>
             )}

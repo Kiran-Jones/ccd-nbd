@@ -121,7 +121,7 @@ export default function BinContainer({
       onDragEnd={handleDragEnd}
     >
       {/* Header with View Summary button */}
-      <div className="flex justify-center mb-3">
+      <div className="flex justify-center mb-1">
         <Button onClick={onComplete} disabled={!canComplete}>
           View Summary
         </Button>
@@ -131,9 +131,9 @@ export default function BinContainer({
       <div className="relative">
         {/* Grid layout for corners and center */}
         <div className="mx-auto max-w-6xl">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-x-3 gap-y-2 lg:gap-x-4 lg:gap-y-2 items-start">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-x-4 lg:gap-x-6 items-start">
           {/* Top Row */}
-          <div className="w-full max-w-[340px] justify-self-center mt-8">
+          <div className="w-full max-w-[320px] justify-self-center relative z-10">
             {/* Top-left: Interests */}
             {(() => {
               const { bin, config } = getBinByPosition('top-left');
@@ -147,7 +147,7 @@ export default function BinContainer({
             })()}
           </div>
           <div>{/* Empty center top */}</div>
-          <div className="w-full max-w-[340px] justify-self-center mt-8">
+          <div className="w-full max-w-[320px] justify-self-center relative z-10">
             {/* Top-right: Skill Set */}
             {(() => {
               const { bin, config } = getBinByPosition('top-right');
@@ -163,7 +163,7 @@ export default function BinContainer({
 
           {/* Middle Row - Center Stack */}
           <div>{/* Empty left */}</div>
-          <div className="justify-self-center py-1 lg:py-2 w-full">
+          <div className="justify-self-center w-full max-w-md -my-[40px] md:-my-[50px] relative z-20">
             <BulletPool
               bullets={uncategorized}
               onDuplicate={handleDuplicate}
@@ -173,7 +173,7 @@ export default function BinContainer({
           <div>{/* Empty right */}</div>
 
           {/* Bottom Row */}
-          <div className="w-full max-w-[340px] justify-self-center -mt-8">
+          <div className="w-full max-w-[320px] justify-self-center relative z-10">
             {/* Bottom-left: Values */}
             {(() => {
               const { bin, config } = getBinByPosition('bottom-left');
@@ -187,7 +187,7 @@ export default function BinContainer({
             })()}
           </div>
           <div>{/* Empty center bottom */}</div>
-          <div className="w-full max-w-[340px] justify-self-center -mt-8">
+          <div className="w-full max-w-[320px] justify-self-center relative z-10">
             {/* Bottom-right: Strengths */}
             {(() => {
               const { bin, config } = getBinByPosition('bottom-right');
@@ -207,8 +207,8 @@ export default function BinContainer({
       {/* Drag Overlay */}
       <DragOverlay>
         {activeBullet && (
-          <div className="bg-white border-2 border-[#00693E] rounded p-3 shadow-lg max-w-sm">
-            <p className="text-sm text-[#404040]">{activeBullet.text}</p>
+          <div className="bg-white border-2 border-[#00693E] rounded-md p-3 shadow-xl max-w-sm rotate-2 scale-105">
+            <p className="text-sm text-[#404040] line-clamp-4">{activeBullet.text}</p>
           </div>
         )}
       </DragOverlay>

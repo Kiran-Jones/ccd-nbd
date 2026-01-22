@@ -241,7 +241,7 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className={`flex-1 ${phase === 'categorize' ? 'py-6' : 'py-12'}`}>
+      <main className={`flex-1 ${phase === 'categorize' ? 'py-2 md:py-4' : 'py-12'}`}>
         <div className={`mx-auto px-6 ${phase === 'preview' ? 'max-w-7xl' : 'max-w-6xl'}`}>
           {/* Phase Title */}
           {phase === 'upload' && (
@@ -269,11 +269,11 @@ function App() {
           )}
 
           {phase === 'categorize' && (
-            <div className="text-center mb-4">
-              <h2 className="font-serif text-3xl text-[#262626] mb-3">
+            <div className="text-center mb-2">
+              <h2 className="font-serif text-2xl md:text-3xl text-[#262626] mb-1">
                 Categorize Your Experiences
               </h2>
-              <p className="text-[#525252] max-w-2xl mx-auto">
+              <p className="text-[#525252] text-sm max-w-2xl mx-auto">
                 Reflect on each experience and place it in the category that
                 best captures what it represents about you.
               </p>

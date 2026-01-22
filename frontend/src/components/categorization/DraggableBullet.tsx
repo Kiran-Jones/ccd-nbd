@@ -1,20 +1,32 @@
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { Copy, Trash2 } from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
 import { BulletPoint } from '../../types/BulletPoint';
 
 interface Props {
   bullet: BulletPoint;
   onDuplicate?: () => void;
   onDelete?: () => void;
+  fixedHeight?: boolean;
 }
 
-export default function DraggableBullet({ bullet, onDuplicate, onDelete }: Props) {
+export default function DraggableBullet({ bullet, onDuplicate, onDelete, fixedHeight }: Props) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: bullet.id,
       data: bullet,
     });
+
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const textRef = useRef<HTMLParagraphElement>(null);
+
+  // Check if text is overflowing
+  useEffect(() => {
+    if (textRef.current && fixedHeight) {
+      setIsOverflowing(textRef.current.scrollHeight > textRef.current.clientHeight);
+    }
+  }, [bullet.text, fixedHeight]);
 
   const style = {
     transform: CSS.Translate.toString(transform),
@@ -49,17 +61,32 @@ export default function DraggableBullet({ bullet, onDuplicate, onDelete }: Props
       {...listeners}
       {...attributes}
       className={`
-        bg-white border border-[#E5E5E5] rounded p-3
+        bg-white border border-[#E5E5E5] rounded-md p-3 shadow-sm
         transition-all duration-200 cursor-grab active:cursor-grabbing
-        ${isDragging ? 'opacity-50 shadow-lg z-50' : 'hover:border-[#D4D4D4] hover:shadow-sm'}
+        ${isDragging ? 'opacity-50 shadow-lg z-50' : 'hover:border-[#D4D4D4] hover:shadow-md'}
+        ${fixedHeight ? 'h-[120px] overflow-hidden' : ''}
       `}
     >
-      <div className="flex items-start gap-3">
-        <p className="flex-1 text-sm text-[#404040] leading-relaxed">
-          {renderFormattedText()}
-        </p>
+      <div className={`flex items-start gap-3 ${fixedHeight ? 'h-full' : ''}`}>
+        <div className={`flex-1 min-h-0 overflow-hidden relative ${fixedHeight ? 'h-full' : ''}`}>
+          <p
+            ref={textRef}
+            className={`text-sm text-[#404040] leading-relaxed ${fixedHeight ? 'overflow-y-auto h-full pr-1' : ''}`}
+          >
+            {renderFormattedText()}
+          </p>
+          {/* Fade gradient for overflow indication */}
+          {fixedHeight && isOverflowing && (
+            <div
+              className="absolute bottom-0 left-0 right-2 h-6 pointer-events-none"
+              style={{
+                background: 'linear-gradient(transparent, white)',
+              }}
+            />
+          )}
+        </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex flex-col items-center gap-1 flex-shrink-0">
           {onDelete && (
             <button
               onClick={(e) => {
@@ -68,11 +95,11 @@ export default function DraggableBullet({ bullet, onDuplicate, onDelete }: Props
                 onDelete();
               }}
               onPointerDown={(e) => e.stopPropagation()}
-              className="p-1.5 text-[#A3A3A3] hover:text-[#9D162E] hover:bg-[#FFEBEE] rounded transition-colors"
+              className="p-2 text-[#737373] hover:text-[#9D162E] hover:bg-[#FFEBEE] rounded-md transition-all hover:scale-110"
               title="Delete duplicate"
               aria-label="Delete this duplicate"
             >
-              <Trash2 size={14} />
+              <Trash2 size={18} />
             </button>
           )}
           {onDuplicate && (
@@ -83,11 +110,11 @@ export default function DraggableBullet({ bullet, onDuplicate, onDelete }: Props
                 onDuplicate();
               }}
               onPointerDown={(e) => e.stopPropagation()}
-              className="p-1.5 text-[#A3A3A3] hover:text-[#00693E] hover:bg-[#F5F5F5] rounded transition-colors"
+              className="p-2 text-[#737373] hover:text-[#00693E] hover:bg-[#E8F5E9] rounded-md transition-all hover:scale-110 border border-transparent hover:border-[#00693E]/20"
               title="Create a copy"
               aria-label="Create a copy of this item"
             >
-              <Copy size={14} />
+              <Copy size={18} />
             </button>
           )}
         </div>

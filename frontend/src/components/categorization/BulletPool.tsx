@@ -18,17 +18,17 @@ export default function BulletPool({ bullets, onDuplicate, onDeleteDuplicate }: 
   return (
     <div className="flex flex-col items-center">
       {/* Header */}
-      <h3 className="font-serif text-xl text-[#262626] mb-2 text-center">
+      <h3 className="font-serif text-lg text-[#262626] mb-1 text-center">
         Your Experiences
       </h3>
 
-      {/* Stack container */}
-      <div className="relative w-full max-w-sm pl-4 pb-4">
+      {/* Stack container - extra padding for stack offset */}
+      <div className="relative w-full max-w-sm pt-3 pl-3">
         {bullets.length === 0 ? (
-          <div className="text-center py-12 bg-white border border-[#E5E5E5] rounded-md">
-            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[#E8F5E9] flex items-center justify-center">
+          <div className="text-center py-8 bg-white border border-[#E5E5E5] rounded-md">
+            <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-[#E8F5E9] flex items-center justify-center">
               <svg
-                className="w-6 h-6 text-[#00693E]"
+                className="w-5 h-5 text-[#00693E]"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -41,56 +41,57 @@ export default function BulletPool({ bullets, onDuplicate, onDeleteDuplicate }: 
                 />
               </svg>
             </div>
-            <p className="text-[#404040] font-medium">All done!</p>
-            <p className="text-sm text-[#737373] mt-1">
+            <p className="text-[#404040] font-medium text-sm">All done!</p>
+            <p className="text-xs text-[#737373] mt-1">
               Every experience has been categorized.
             </p>
           </div>
         ) : (
-          <>
+          <div className="relative">
             {/* Stack effect layers (behind the top card) */}
             {totalBullets >= 3 && (
               <div
-                className="absolute inset-0 bg-white border border-[#E5E5E5] rounded-md"
+                className="absolute top-0 left-0 right-0 h-[120px] bg-white border border-[#D4D4D4] rounded-md shadow-sm"
                 style={{
-                  transform: 'translate(-12px, 12px)',
+                  transform: 'translate(-8px, -8px)',
                   zIndex: 0,
                 }}
               />
             )}
             {totalBullets >= 2 && (
               <div
-                className="absolute inset-0 bg-white border border-[#E5E5E5] rounded-md"
+                className="absolute top-0 left-0 right-0 h-[120px] bg-white border border-[#E5E5E5] rounded-md shadow-sm"
                 style={{
-                  transform: 'translate(-6px, 6px)',
+                  transform: 'translate(-4px, -4px)',
                   zIndex: 1,
                 }}
               />
             )}
 
-            {/* Top card - the draggable bullet */}
+            {/* Top card - the draggable bullet with fixed height */}
             <div className="relative z-10">
               <DraggableBullet
                 key={topBullet.id}
                 bullet={topBullet}
                 onDuplicate={() => onDuplicate(topBullet)}
                 onDelete={isDuplicate(topBullet.id) ? () => onDeleteDuplicate(topBullet.id) : undefined}
+                fixedHeight
               />
             </div>
 
             {/* Remaining count indicator */}
             {remainingCount > 0 && (
-              <p className="text-xs text-[#737373] text-center mt-2">
+              <p className="text-xs text-[#737373] text-center mt-3">
                 {remainingCount} more {remainingCount === 1 ? 'experience' : 'experiences'} remaining
               </p>
             )}
-          </>
+          </div>
         )}
       </div>
 
       {/* Instructions */}
       {bullets.length > 0 && (
-        <p className="text-sm text-[#737373] mt-3 leading-relaxed text-center max-w-sm">
+        <p className="text-xs text-[#737373] mt-3 leading-relaxed text-center max-w-sm">
           Drag to a category corner. Use the copy button to place in multiple categories.
         </p>
       )}
