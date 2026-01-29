@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import resume, export, narrative
 from app.config.settings import settings
+from app.middleware.rate_limit import RateLimiter, SimpleRateLimitMiddleware
 
 app = FastAPI(
     title="Career Design Resume Analyzer",
@@ -16,6 +17,16 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+rate_limiter = RateLimiter()
+app.add_middleware(
+    SimpleRateLimitMiddleware,
+    limiter=rate_limiter,
+    default_max_requests=settings.rate_limit_default_max_requests,
+    default_window_seconds=settings.rate_limit_default_window_seconds,
+    ai_max_requests=settings.rate_limit_ai_max_requests,
+    ai_window_seconds=settings.rate_limit_ai_window_seconds,
 )
 
 # Include routers

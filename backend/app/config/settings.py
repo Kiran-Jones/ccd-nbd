@@ -15,6 +15,12 @@ class Settings(BaseSettings):
     dartmouth_ai_base_url: str = "https://chat.dartmouth.edu/api"
     dartmouth_ai_model: str = "anthropic.claude-3-5-haiku-20241022"
 
+    # Rate limiting (per IP)
+    rate_limit_default_max_requests: int = 60
+    rate_limit_default_window_seconds: int = 60
+    rate_limit_ai_max_requests: int = 2
+    rate_limit_ai_window_seconds: int = 60
+
     class Config:
         env_file = ".env"
 
