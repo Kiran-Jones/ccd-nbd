@@ -1,4 +1,5 @@
 import { Bin } from './Bin';
+import { OnboardingData } from './Onboarding';
 
 export interface Distribution {
   bin_id: string;
@@ -16,4 +17,5 @@ export interface AnalysisResult {
   bins: Bin[];
   analytics: Analytics;
   timestamp: string;
+  onboardingData?: OnboardingData;
 }

@@ -1,43 +1,132 @@
-import { useState } from 'react';
-import { BulletPoint } from './types/BulletPoint';
-import { Bin } from './types/Bin';
-import { AnalysisResult, Distribution } from './types/Analytics';
-import { BINS } from './config/bins';
-import FileUpload from './components/upload/FileUpload';
-import BulletPreview from './components/upload/BulletPreview';
-import BinContainer from './components/categorization/BinContainer';
-import DistributionChart from './components/summary/DistributionChart';
-import BinList from './components/summary/BinList';
-import InsightsPanel from './components/summary/InsightsPanel';
-import { exportJSON, exportPDF, downloadBlob } from './services/api';
-import Button from './components/common/Button';
+import { useState } from "react";
+import { BulletPoint } from "./types/BulletPoint";
+import { Bin } from "./types/Bin";
+import { AnalysisResult, Distribution } from "./types/Analytics";
+import { OnboardingData } from "./types/Onboarding";
+import { NarrativeResponse } from "./types/NarrativeAnalysis";
+import { BINS } from "./config/bins";
+import FileUpload from "./components/upload/FileUpload";
+import BulletPreview from "./components/upload/BulletPreview";
+import BinContainer from "./components/categorization/BinContainer";
+import DistributionChart from "./components/summary/DistributionChart";
+import BinList from "./components/summary/BinList";
+import InsightsPanel from "./components/summary/InsightsPanel";
+import NarrativeAnalysisPanel from "./components/summary/NarrativeAnalysisPanel";
+import ParagraphStep from "./components/onboarding/ParagraphStep";
+import SentenceStep from "./components/onboarding/SentenceStep";
+import WordStep from "./components/onboarding/WordStep";
+import CareerValueStep from "./components/onboarding/CareerValueStep";
+import { exportJSON, exportPDF, downloadBlob, generateNarrative } from "./services/api";
+import Button from "./components/common/Button";
 
-type AppPhase = 'upload' | 'preview' | 'categorize' | 'summary';
+type NarrativeState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "success"; data: NarrativeResponse }
+  | { status: "error"; message: string };
+
+type AppPhase =
+  | "paragraph"
+  | "sentence"
+  | "word"
+  | "careerValue"
+  | "upload"
+  | "preview"
+  | "categorize"
+  | "summary";
 
 function App() {
-  const [phase, setPhase] = useState<AppPhase>('upload');
+  const [phase, setPhase] = useState<AppPhase>("paragraph");
   const [bullets, setBullets] = useState<BulletPoint[]>([]);
   const [uncategorized, setUncategorized] = useState<BulletPoint[]>([]);
   const [bins, setBins] = useState<Bin[]>(
-    BINS.map((config) => ({ ...config, bullets: [] }))
+    BINS.map((config) => ({ ...config, bullets: [] })),
   );
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(
-    null
+    null,
   );
   const [totalBullets, setTotalBullets] = useState(0);
-  const [exporting, setExporting] = useState<'json' | 'pdf' | null>(null);
+  const [exporting, setExporting] = useState<"json" | "pdf" | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [onboardingData, setOnboardingData] = useState<OnboardingData>({
+    paragraph: "",
+    sentence: "",
+    word: "",
+    careerValue: "",
+  });
+  const [narrativeState, setNarrativeState] = useState<NarrativeState>({
+    status: "idle",
+  });
+
+  const isOnboardingPhase = [
+    "paragraph",
+    "sentence",
+    "word",
+    "careerValue",
+  ].includes(phase);
+
+  const handleOnboardingStepComplete = (
+    field: keyof OnboardingData,
+    value: string,
+  ) => {
+    setOnboardingData((prev) => ({ ...prev, [field]: value }));
+    const phaseOrder: AppPhase[] = [
+      "paragraph",
+      "sentence",
+      "word",
+      "careerValue",
+      "upload",
+    ];
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      setPhase(phaseOrder[currentIndex + 1]);
+    }
+  };
+
+  const handleOnboardingBack = () => {
+    const phaseOrder: AppPhase[] = [
+      "paragraph",
+      "sentence",
+      "word",
+      "careerValue",
+    ];
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      setPhase(phaseOrder[currentIndex - 1]);
+    }
+  };
 
   const handleFileUploaded = (extractedBullets: BulletPoint[], file: File) => {
     setBullets(extractedBullets);
     setUploadedFile(file);
-    setPhase('preview');
+    setPhase("preview");
   };
 
   const handlePreviewConfirmed = (editedBullets: BulletPoint[]) => {
     setUncategorized(editedBullets);
     setTotalBullets(editedBullets.length);
-    setPhase('categorize');
+    setPhase("categorize");
+  };
+
+  const fetchNarrative = async (result: AnalysisResult) => {
+    setNarrativeState({ status: "loading" });
+    try {
+      const narrative = await generateNarrative(result);
+      setNarrativeState({ status: "success", data: narrative });
+    } catch (error) {
+      let message = "Unable to generate narrative analysis. Please try again.";
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as { response?: { data?: { detail?: string } } };
+        if (axiosError.response?.data?.detail) {
+          message = axiosError.response.data.detail;
+        }
+      }
+      console.error("Narrative generation failed:", error);
+      setNarrativeState({
+        status: "error",
+        message,
+      });
+    }
   };
 
   const handleCategorizationComplete = () => {
@@ -46,9 +135,17 @@ function App() {
       bins,
       analytics,
       timestamp: new Date().toISOString(),
+      onboardingData,
     };
     setAnalysisResult(result);
-    setPhase('summary');
+    setPhase("summary");
+    fetchNarrative(result);
+  };
+
+  const handleNarrativeRetry = () => {
+    if (analysisResult) {
+      fetchNarrative(analysisResult);
+    }
   };
 
   const calculateAnalytics = (bins: Bin[]) => {
@@ -58,11 +155,13 @@ function App() {
       bin_id: bin.id,
       count: bin.bullets.length,
       percentage:
-        total > 0 ? Math.round((bin.bullets.length / total) * 100 * 10) / 10 : 0,
+        total > 0
+          ? Math.round((bin.bullets.length / total) * 100 * 10) / 10
+          : 0,
     }));
 
     const topBin = bins.reduce((max, bin) =>
-      bin.bullets.length > max.bullets.length ? bin : max
+      bin.bullets.length > max.bullets.length ? bin : max,
     );
 
     const suggestions = generateSuggestions(distribution, bins);
@@ -83,21 +182,21 @@ function App() {
 
       if (dist.percentage < 15 && dist.count > 0) {
         suggestions.push(
-          `Consider adding more bullets to '${bin.label}' to provide a fuller picture`
+          `Consider adding more bullets to '${bin.label}' to provide a fuller picture`,
         );
       } else if (dist.percentage > 40) {
         suggestions.push(
-          `Strong emphasis on '${bin.label}' - this is a key part of your profile!`
+          `Strong emphasis on '${bin.label}' - this is a key part of your profile!`,
         );
       } else if (dist.count === 0) {
         suggestions.push(
-          `No bullets in '${bin.label}' - reflect on experiences that fit this category`
+          `No bullets in '${bin.label}' - reflect on experiences that fit this category`,
         );
       }
     });
 
     if (distribution.filter((d) => d.count > 0).length === bins.length) {
-      suggestions.push('Well-balanced profile across all categories!');
+      suggestions.push("Well-balanced profile across all categories!");
     }
 
     return suggestions.slice(0, 5);
@@ -105,15 +204,15 @@ function App() {
 
   const handleExportJSON = async () => {
     if (!analysisResult) return;
-    setExporting('json');
+    setExporting("json");
     try {
       const blob = await exportJSON(analysisResult);
       downloadBlob(
         blob,
-        `career_analysis_${new Date().toISOString().split('T')[0]}.json`
+        `career_analysis_${new Date().toISOString().split("T")[0]}.json`,
       );
     } catch (error) {
-      console.error('Export failed:', error);
+      console.error("Export failed:", error);
     } finally {
       setExporting(null);
     }
@@ -121,36 +220,43 @@ function App() {
 
   const handleExportPDF = async () => {
     if (!analysisResult) return;
-    setExporting('pdf');
+    setExporting("pdf");
     try {
       const blob = await exportPDF(analysisResult);
       downloadBlob(
         blob,
-        `career_analysis_${new Date().toISOString().split('T')[0]}.pdf`
+        `career_analysis_${new Date().toISOString().split("T")[0]}.pdf`,
       );
     } catch (error) {
-      console.error('Export failed:', error);
+      console.error("Export failed:", error);
     } finally {
       setExporting(null);
     }
   };
 
   const handleReset = () => {
-    setPhase('upload');
+    setPhase("paragraph");
     setBullets([]);
     setUncategorized([]);
     setBins(BINS.map((config) => ({ ...config, bullets: [] })));
     setAnalysisResult(null);
     setTotalBullets(0);
     setUploadedFile(null);
+    setOnboardingData({
+      paragraph: "",
+      sentence: "",
+      word: "",
+      careerValue: "",
+    });
+    setNarrativeState({ status: "idle" });
   };
 
   // Step indicator for visual progress
   const steps = [
-    { id: 'upload', label: 'Upload' },
-    { id: 'preview', label: 'Review' },
-    { id: 'categorize', label: 'Categorize' },
-    { id: 'summary', label: 'Summary' },
+    { id: "upload", label: "Upload" },
+    { id: "preview", label: "Review" },
+    { id: "categorize", label: "Categorize" },
+    { id: "summary", label: "Summary" },
   ];
   const currentStepIndex = steps.findIndex((s) => s.id === phase);
 
@@ -178,14 +284,14 @@ function App() {
                 className="hidden sm:block text-left hover:opacity-80 transition-opacity"
               >
                 <h1 className="font-serif text-xl md:text-2xl">
-                  Resume Analyzer
+                  Narrative by Design Workshop
                 </h1>
                 <p className="text-white/80 text-xs mt-0.5">
-                  Discover your professional identity
+                  Discover how to tell your story
                 </p>
               </button>
             </div>
-            {phase !== 'upload' && (
+            {!isOnboardingPhase && phase !== "upload" && (
               <Button
                 variant="secondary"
                 onClick={handleReset}
@@ -197,54 +303,60 @@ function App() {
           </div>
         </div>
 
-        {/* Progress Steps */}
-        <div className="bg-[#003D1C]">
-          <div className="max-w-6xl mx-auto px-6 py-3">
-            <div className="flex items-center justify-center gap-2 md:gap-4">
-              {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`
-                        w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium
-                        ${
-                          index <= currentStepIndex
-                            ? 'bg-white text-[#00693E]'
-                            : 'bg-white/20 text-white/60'
-                        }
-                      `}
-                    >
-                      {index + 1}
+        {/* Progress Steps - only show during main flow, not onboarding */}
+        {!isOnboardingPhase && (
+          <div className="bg-[#003D1C]">
+            <div className="max-w-6xl mx-auto px-6 py-3">
+              <div className="flex items-center justify-center gap-2 md:gap-4">
+                {steps.map((step, index) => (
+                  <div key={step.id} className="flex items-center">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`
+                          w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium
+                          ${
+                            index <= currentStepIndex
+                              ? "bg-white text-[#00693E]"
+                              : "bg-white/20 text-white/60"
+                          }
+                        `}
+                      >
+                        {index + 1}
+                      </div>
+                      <span
+                        className={`
+                          text-sm hidden sm:inline
+                          ${index <= currentStepIndex ? "text-white" : "text-white/60"}
+                        `}
+                      >
+                        {step.label}
+                      </span>
                     </div>
-                    <span
-                      className={`
-                        text-sm hidden sm:inline
-                        ${index <= currentStepIndex ? 'text-white' : 'text-white/60'}
-                      `}
-                    >
-                      {step.label}
-                    </span>
+                    {index < steps.length - 1 && (
+                      <div
+                        className={`
+                          w-8 md:w-16 h-px mx-2
+                          ${index < currentStepIndex ? "bg-white" : "bg-white/20"}
+                        `}
+                      />
+                    )}
                   </div>
-                  {index < steps.length - 1 && (
-                    <div
-                      className={`
-                        w-8 md:w-16 h-px mx-2
-                        ${index < currentStepIndex ? 'bg-white' : 'bg-white/20'}
-                      `}
-                    />
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </header>
 
       {/* Main Content */}
-      <main className={`flex-1 ${phase === 'categorize' ? 'py-2 md:py-4' : 'py-12'}`}>
-        <div className={`mx-auto px-6 ${phase === 'preview' ? 'max-w-7xl' : 'max-w-6xl'}`}>
+      <main
+        className={`flex-1 ${phase === "categorize" ? "py-2 md:py-4" : "py-12"}`}
+      >
+        <div
+          className={`mx-auto px-6 ${phase === "preview" ? "max-w-7xl" : isOnboardingPhase ? "max-w-4xl" : "max-w-6xl"}`}
+        >
           {/* Phase Title */}
-          {phase === 'upload' && (
+          {phase === "upload" && (
             <div className="text-center mb-12">
               <h2 className="font-serif text-3xl md:text-4xl text-[#262626] mb-3">
                 Begin Your Career Exploration
@@ -256,19 +368,19 @@ function App() {
             </div>
           )}
 
-          {phase === 'preview' && (
+          {phase === "preview" && (
             <div className="text-center mb-8">
               <h2 className="font-serif text-3xl text-[#262626] mb-3">
                 Review Your Experiences
               </h2>
               <p className="text-[#525252] max-w-2xl mx-auto">
-                Compare your original resume with the extracted experiences. Edit
-                or add items as needed.
+                Compare your original resume with the extracted experiences.
+                Edit or add items as needed.
               </p>
             </div>
           )}
 
-          {phase === 'categorize' && (
+          {phase === "categorize" && (
             <div className="text-center mb-2">
               <h2 className="font-serif text-2xl md:text-3xl text-[#262626] mb-1">
                 Categorize Your Experiences
@@ -280,32 +392,72 @@ function App() {
             </div>
           )}
 
-          {phase === 'summary' && (
+          {phase === "summary" && (
             <div className="text-center mb-8">
               <h2 className="font-serif text-3xl text-[#262626] mb-3">
                 Your Career Profile
               </h2>
               <p className="text-[#525252] max-w-2xl mx-auto">
-                Here's what your experiences reveal about your professional identity.
+                Here's what your experiences reveal about your professional
+                identity.
               </p>
             </div>
           )}
 
           {/* Phase Content */}
-          {phase === 'upload' && (
+          {phase === "paragraph" && (
+            <ParagraphStep
+              value={onboardingData.paragraph}
+              onComplete={(value) =>
+                handleOnboardingStepComplete("paragraph", value)
+              }
+            />
+          )}
+
+          {phase === "sentence" && (
+            <SentenceStep
+              value={onboardingData.sentence}
+              onComplete={(value) =>
+                handleOnboardingStepComplete("sentence", value)
+              }
+              onBack={handleOnboardingBack}
+            />
+          )}
+
+          {phase === "word" && (
+            <WordStep
+              value={onboardingData.word}
+              onComplete={(value) =>
+                handleOnboardingStepComplete("word", value)
+              }
+              onBack={handleOnboardingBack}
+            />
+          )}
+
+          {phase === "careerValue" && (
+            <CareerValueStep
+              value={onboardingData.careerValue}
+              onComplete={(value) =>
+                handleOnboardingStepComplete("careerValue", value)
+              }
+              onBack={handleOnboardingBack}
+            />
+          )}
+
+          {phase === "upload" && (
             <FileUpload onFileUploaded={handleFileUploaded} />
           )}
 
-          {phase === 'preview' && (
+          {phase === "preview" && (
             <BulletPreview
               bullets={bullets}
               file={uploadedFile}
               onConfirm={handlePreviewConfirmed}
-              onBack={() => setPhase('upload')}
+              onBack={() => setPhase("upload")}
             />
           )}
 
-          {phase === 'categorize' && (
+          {phase === "categorize" && (
             <BinContainer
               bins={bins}
               uncategorized={uncategorized}
@@ -317,9 +469,20 @@ function App() {
             />
           )}
 
-          {phase === 'summary' && analysisResult && (
+          {phase === "summary" && analysisResult && (
             <div className="space-y-8">
-              <DistributionChart analytics={analysisResult.analytics} bins={bins} />
+              {narrativeState.status !== "idle" && (
+                <NarrativeAnalysisPanel
+                  narrativeState={narrativeState}
+                  word={onboardingData.word}
+                  careerValue={onboardingData.careerValue}
+                  onRetry={handleNarrativeRetry}
+                />
+              )}
+              <DistributionChart
+                analytics={analysisResult.analytics}
+                bins={bins}
+              />
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <BinList bins={bins} />
                 <InsightsPanel analytics={analysisResult.analytics} />
@@ -332,7 +495,8 @@ function App() {
                     Save Your Analysis
                   </h3>
                   <p className="text-[#525252] mb-6">
-                    Download your career profile for future reference or sharing.
+                    Download your career profile for future reference or
+                    sharing.
                   </p>
                   <div className="flex gap-4 justify-center">
                     <Button
@@ -340,13 +504,13 @@ function App() {
                       onClick={handleExportJSON}
                       disabled={exporting !== null}
                     >
-                      {exporting === 'json' ? 'Exporting...' : 'Download JSON'}
+                      {exporting === "json" ? "Exporting..." : "Download JSON"}
                     </Button>
                     <Button
                       onClick={handleExportPDF}
                       disabled={exporting !== null}
                     >
-                      {exporting === 'pdf' ? 'Exporting...' : 'Download PDF'}
+                      {exporting === "pdf" ? "Exporting..." : "Download PDF"}
                     </Button>
                   </div>
                 </div>
@@ -360,11 +524,10 @@ function App() {
       <footer className="bg-[#003D1C] text-white/80">
         <div className="max-w-6xl mx-auto px-6 py-6">
           <div className="text-center">
-            <p className="text-sm">
-              Dartmouth Center for Career Design
-            </p>
+            <p className="text-sm">Dartmouth Center for Career Design</p>
             <p className="text-xs text-white/60 mt-1">
-              A tool for exploring your professional identity through self-reflection
+              A tool for exploring your professional identity through
+              self-reflection
             </p>
             <p className="text-xs text-white/50 mt-3">
               Copyright © 2026 Dartmouth College

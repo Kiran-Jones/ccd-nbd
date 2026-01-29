@@ -1,7 +1,8 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 from app.models.bin import Bin
+from app.models.onboarding import OnboardingData
 
 
 class Distribution(BaseModel):
@@ -20,3 +21,4 @@ class AnalysisResult(BaseModel):
     bins: List[Bin]
     analytics: Analytics
     timestamp: datetime
+    onboardingData: Optional[OnboardingData] = None

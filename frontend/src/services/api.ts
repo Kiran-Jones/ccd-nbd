@@ -1,6 +1,7 @@
 import axios from "axios";
 import { BulletPoint } from "../types/BulletPoint";
 import { AnalysisResult } from "../types/Analytics";
+import { NarrativeResponse } from "../types/NarrativeAnalysis";
 
 const API_ORIGIN = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -45,6 +46,13 @@ export const downloadBlob = (blob: Blob, filename: string) => {
   link.click();
   link.remove();
   window.URL.revokeObjectURL(url);
+};
+
+export const generateNarrative = async (
+  result: AnalysisResult
+): Promise<NarrativeResponse> => {
+  const response = await api.post("/narrative", result);
+  return response.data;
 };
 
 

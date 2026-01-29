@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import resume, export
+from app.routers import resume, export, narrative
 from app.config.settings import settings
 
 app = FastAPI(
@@ -21,6 +21,7 @@ app.add_middleware(
 # Include routers
 app.include_router(resume.router, prefix="/api", tags=["resume"])
 app.include_router(export.router, prefix="/api/export", tags=["export"])
+app.include_router(narrative.router, prefix="/api", tags=["narrative"])
 
 
 @app.get("/")
