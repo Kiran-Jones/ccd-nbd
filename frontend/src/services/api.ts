@@ -5,6 +5,13 @@ import { NarrativeResponse } from "../types/NarrativeAnalysis";
 
 const API_ORIGIN = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
+export const pingHealth = (): void => {
+  // Fire-and-forget - we don't care about the response
+  fetch(`${API_ORIGIN}/health`).catch(() => {
+    // Silently ignore errors - this is just a wake-up call
+  });
+};
+
 const api = axios.create({
   baseURL: `${API_ORIGIN}/api`,
 });

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { BulletPoint } from "./types/BulletPoint";
 import { Bin } from "./types/Bin";
 import { AnalysisResult, Distribution } from "./types/Analytics";
@@ -16,7 +16,7 @@ import ParagraphStep from "./components/onboarding/ParagraphStep";
 import SentenceStep from "./components/onboarding/SentenceStep";
 import WordStep from "./components/onboarding/WordStep";
 import CareerValueStep from "./components/onboarding/CareerValueStep";
-import { exportJSON, exportPDF, downloadBlob, generateNarrative } from "./services/api";
+import { exportJSON, exportPDF, downloadBlob, generateNarrative, pingHealth } from "./services/api";
 import Button from "./components/common/Button";
 
 type NarrativeState =
@@ -57,6 +57,7 @@ function App() {
   const [narrativeState, setNarrativeState] = useState<NarrativeState>({
     status: "idle",
   });
+  const hasWokenBackend = useRef(false);
 
   const isOnboardingPhase = [
     "paragraph",
@@ -69,6 +70,10 @@ function App() {
     field: keyof OnboardingData,
     value: string,
   ) => {
+    if (field === "paragraph" && !hasWokenBackend.current) {
+      hasWokenBackend.current = true;
+      pingHealth();
+    }
     setOnboardingData((prev) => ({ ...prev, [field]: value }));
     const phaseOrder: AppPhase[] = [
       "paragraph",
