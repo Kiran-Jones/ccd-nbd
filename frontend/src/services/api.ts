@@ -56,11 +56,28 @@ export const downloadBlob = (blob: Blob, filename: string) => {
 };
 
 export const generateNarrative = async (
-  result: AnalysisResult
+  result: AnalysisResult,
+  careerValue?: string
 ): Promise<NarrativeResponse> => {
-  const response = await api.post("/narrative", result);
+  const baseOnboarding = result.onboardingData ?? {
+    paragraph: "",
+    sentence: "",
+    word: "",
+    careerValues: [],
+  };
+  const payload = careerValue
+    ? {
+        ...result,
+        onboardingData: {
+          ...baseOnboarding,
+          careerValue,
+          careerValues: baseOnboarding.careerValues.length
+            ? baseOnboarding.careerValues
+            : [careerValue],
+        },
+      }
+    : result;
+  const response = await api.post("/narrative", payload);
   return response.data;
 };
-
-
 

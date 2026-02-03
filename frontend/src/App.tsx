@@ -52,11 +52,11 @@ function App() {
     paragraph: "",
     sentence: "",
     word: "",
-    careerValue: "",
+    careerValues: [],
   });
-  const [narrativeState, setNarrativeState] = useState<NarrativeState>({
-    status: "idle",
-  });
+  const [narrativeStates, setNarrativeStates] = useState<
+    Record<string, NarrativeState>
+  >({});
   const hasWokenBackend = useRef(false);
 
   const isOnboardingPhase = [
@@ -68,7 +68,7 @@ function App() {
 
   const handleOnboardingStepComplete = (
     field: keyof OnboardingData,
-    value: string,
+    value: string | string[],
   ) => {
     if (field === "paragraph" && !hasWokenBackend.current) {
       hasWokenBackend.current = true;
@@ -113,25 +113,48 @@ function App() {
     setPhase("categorize");
   };
 
-  const fetchNarrative = async (result: AnalysisResult) => {
-    setNarrativeState({ status: "loading" });
-    try {
-      const narrative = await generateNarrative(result);
-      setNarrativeState({ status: "success", data: narrative });
-    } catch (error) {
-      let message = "Unable to generate narrative analysis. Please try again.";
-      if (error && typeof error === "object" && "response" in error) {
-        const axiosError = error as { response?: { data?: { detail?: string } } };
-        if (axiosError.response?.data?.detail) {
-          message = axiosError.response.data.detail;
-        }
-      }
-      console.error("Narrative generation failed:", error);
-      setNarrativeState({
-        status: "error",
-        message,
-      });
+  const fetchNarratives = async (result: AnalysisResult) => {
+    const values = result.onboardingData?.careerValues ?? [];
+    if (values.length === 0) {
+      setNarrativeStates({});
+      return;
     }
+
+    setNarrativeStates((prev) => {
+      const updated: Record<string, NarrativeState> = { ...prev };
+      values.forEach((value) => {
+        updated[value] = { status: "loading" };
+      });
+      return updated;
+    });
+
+    await Promise.allSettled(
+      values.map(async (value) => {
+        try {
+          const narrative = await generateNarrative(result, value);
+          setNarrativeStates((prev) => ({
+            ...prev,
+            [value]: { status: "success", data: narrative },
+          }));
+        } catch (error) {
+          let message =
+            "Unable to generate narrative analysis. Please try again.";
+          if (error && typeof error === "object" && "response" in error) {
+            const axiosError = error as {
+              response?: { data?: { detail?: string } };
+            };
+            if (axiosError.response?.data?.detail) {
+              message = axiosError.response.data.detail;
+            }
+          }
+          console.error("Narrative generation failed:", error);
+          setNarrativeStates((prev) => ({
+            ...prev,
+            [value]: { status: "error", message },
+          }));
+        }
+      })
+    );
   };
 
   const handleCategorizationComplete = () => {
@@ -144,12 +167,24 @@ function App() {
     };
     setAnalysisResult(result);
     setPhase("summary");
-    fetchNarrative(result);
+    fetchNarratives(result);
   };
 
-  const handleNarrativeRetry = () => {
+  const handleNarrativeRetry = (value: string) => {
     if (analysisResult) {
-      fetchNarrative(analysisResult);
+      const baseOnboarding = analysisResult.onboardingData ?? {
+        paragraph: "",
+        sentence: "",
+        word: "",
+        careerValues: [],
+      };
+      fetchNarratives({
+        ...analysisResult,
+        onboardingData: {
+          ...baseOnboarding,
+          careerValues: [value],
+        },
+      });
     }
   };
 
@@ -251,9 +286,9 @@ function App() {
       paragraph: "",
       sentence: "",
       word: "",
-      careerValue: "",
+      careerValues: [],
     });
-    setNarrativeState({ status: "idle" });
+    setNarrativeStates({});
   };
 
   // Step indicator for visual progress
@@ -358,7 +393,7 @@ function App() {
         className={`flex-1 ${phase === "categorize" ? "py-2 md:py-4" : "py-12"}`}
       >
         <div
-          className={`mx-auto px-6 ${phase === "preview" ? "max-w-7xl" : isOnboardingPhase ? "max-w-4xl" : "max-w-6xl"}`}
+          className={`mx-auto px-6 ${phase === "preview" || phase === "summary" ? "max-w-7xl" : isOnboardingPhase ? "max-w-4xl" : "max-w-6xl"}`}
         >
           {/* Phase Title */}
           {phase === "upload" && (
@@ -441,9 +476,9 @@ function App() {
 
           {phase === "careerValue" && (
             <CareerValueStep
-              value={onboardingData.careerValue}
+              values={onboardingData.careerValues}
               onComplete={(value) =>
-                handleOnboardingStepComplete("careerValue", value)
+                handleOnboardingStepComplete("careerValues", value)
               }
               onBack={handleOnboardingBack}
             />
@@ -476,13 +511,34 @@ function App() {
 
           {phase === "summary" && analysisResult && (
             <div className="space-y-8">
-              {narrativeState.status !== "idle" && (
-                <NarrativeAnalysisPanel
-                  narrativeState={narrativeState}
-                  word={onboardingData.word}
-                  careerValue={onboardingData.careerValue}
-                  onRetry={handleNarrativeRetry}
-                />
+              <div className="border-t border-[#E5E5E5] pt-6 flex flex-wrap items-center gap-3 justify-center">
+                <span className="text-[#737373] text-sm">Your word:</span>
+                <span className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium">
+                  {onboardingData.word}
+                </span>
+              </div>
+              {onboardingData.careerValues.length > 0 && (
+                <div
+                  className={
+                    onboardingData.careerValues.length === 1
+                      ? ""
+                      : onboardingData.careerValues.length === 2
+                        ? "grid grid-cols-1 lg:grid-cols-2 gap-6"
+                        : "grid grid-cols-1 lg:grid-cols-3 gap-6"
+                  }
+                >
+                  {onboardingData.careerValues.map((value) => (
+                    <NarrativeAnalysisPanel
+                      key={value}
+                      narrativeState={
+                        narrativeStates[value] || { status: "idle" }
+                      }
+                      word={onboardingData.word}
+                      careerValue={value}
+                      onRetry={() => handleNarrativeRetry(value)}
+                    />
+                  ))}
+                </div>
               )}
               <DistributionChart
                 analytics={analysisResult.analytics}

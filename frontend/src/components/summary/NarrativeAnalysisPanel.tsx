@@ -4,6 +4,7 @@ import {
 } from "../../types/NarrativeAnalysis";
 
 type NarrativeState =
+  | { status: "idle" }
   | { status: "loading" }
   | { status: "success"; data: NarrativeResponse }
   | { status: "error"; message: string };
@@ -119,6 +120,12 @@ export default function NarrativeAnalysisPanel({
         <p className="text-[#525252] mt-2">
           Personalized guidance based on your workshop journey
         </p>
+        <div className="flex flex-wrap items-center gap-2 mt-3">
+          <span className="text-[#737373] text-sm">Value focus:</span>
+          <span className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium">
+            {careerValue}
+          </span>
+        </div>
       </div>
 
       <div className="p-8">
@@ -129,6 +136,12 @@ export default function NarrativeAnalysisPanel({
             </p>
             <LoadingSkeleton />
           </>
+        )}
+
+        {narrativeState.status === "idle" && (
+          <p className="text-[#737373] text-sm">
+            Preparing your narrative guidance...
+          </p>
         )}
 
         {narrativeState.status === "error" && (
@@ -146,23 +159,8 @@ export default function NarrativeAnalysisPanel({
         {narrativeState.status === "success" && (
           <>
             {/* Word and Value Pills - at top */}
-            <div className="flex flex-wrap gap-4 items-center mb-6">
-              <div className="flex items-center gap-2">
-                <span className="text-[#737373] text-sm">Your word:</span>
-                <span className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium">
-                  {word}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[#737373] text-sm">Your value:</span>
-                <span className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium">
-                  {careerValue}
-                </span>
-              </div>
-            </div>
-
             {/* Paragraph Content */}
-            <p className="text-[#404040] leading-relaxed text-lg">
+            <p className="text-[#404040] leading-relaxed text-[15px]">
               {narrativeState.data.paragraph}
             </p>
 

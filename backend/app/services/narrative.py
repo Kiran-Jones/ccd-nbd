@@ -51,7 +51,7 @@ class NarrativeService:
                 paragraph="Complete the onboarding steps to receive personalized narrative guidance.",
                 bullets=[
                     "Identify your defining word",
-                    "Select your career value",
+                    "Select your career values",
                     "Categorize your experiences",
                 ],
                 experienceSuggestions=[],
@@ -59,6 +59,20 @@ class NarrativeService:
 
         # Build context from analysis data
         onboarding = analysis.onboardingData
+        career_value = (
+            onboarding.careerValue
+            or (onboarding.careerValues[0] if onboarding.careerValues else "")
+        )
+        if not career_value:
+            return NarrativeResponse(
+                paragraph="Select at least one career value to receive personalized narrative guidance.",
+                bullets=[
+                    "Choose up to three career values",
+                    "Identify your defining word",
+                    "Categorize your experiences",
+                ],
+                experienceSuggestions=[],
+            )
         distribution_summary = self._format_distribution(analysis)
         experiences_detailed = self._format_experiences_detailed(analysis)
 
@@ -71,6 +85,7 @@ You must:
 2. Identify which experiences strongly align, moderately align, or weakly align with their word
 3. For experiences that don't strongly align, suggest how to REFRAME the narrative (not rewrite the resume bullet, but how to TALK about it)
 4. Connect patterns to their career value
+5. Write directly to the student using second person ("you"), avoiding phrases like "this student"
 
 CRITICAL CONSTRAINTS:
 - Do NOT suggest resume rewrites or edits to the bullet text itself
@@ -103,7 +118,7 @@ For experienceSuggestions:
         user_prompt = f"""Student's Workshop Journey:
 
 DEFINING WORD: {onboarding.word}
-CAREER VALUE: {onboarding.careerValue}
+CAREER VALUE: {career_value}
 
 SELF-DESCRIPTION: {onboarding.paragraph}
 
@@ -120,7 +135,7 @@ DETAILED EXPERIENCES BY CATEGORY:
 Analyze these specific experiences through the lens of "{onboarding.word}" and provide reframing suggestions for experiences that don't naturally align with this word. Help the student see how to tell their story consistently around "{onboarding.word}" even when the original experience framing doesn't emphasize it."""
 
         logger.info(
-            f"Generating narrative for word: {onboarding.word}, value: {onboarding.careerValue}"
+            f"Generating narrative for word: {onboarding.word}, value: {career_value}"
         )
         logger.debug(f"Experiences to analyze:\n{experiences_detailed}")
 
@@ -138,6 +153,8 @@ Analyze these specific experiences through the lens of "{onboarding.word}" and p
         logger.debug(f"AI response: {content}")
 
         result = json.loads(content)
+        if isinstance(result.get("paragraph"), str):
+            result["paragraph"] = result["paragraph"].replace("this student", "you")
 
         experience_suggestions = []
         for exp in result.get("experienceSuggestions", []):

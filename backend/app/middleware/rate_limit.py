@@ -53,6 +53,8 @@ class SimpleRateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
         if path.startswith("/api"):
+            if request.method == "OPTIONS":
+                return await call_next(request)
             client_ip = request.client.host if request.client else "unknown"
 
             if path == "/api/narrative":

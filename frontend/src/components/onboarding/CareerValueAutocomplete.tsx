@@ -2,12 +2,14 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { CAREER_VALUES } from '../../config/careerValues';
 
 interface Props {
-  value: string;
-  onChange: (value: string) => void;
+  values: string[];
+  onChange: (values: string[]) => void;
 }
 
-export default function CareerValueAutocomplete({ value, onChange }: Props) {
-  const [inputValue, setInputValue] = useState(value);
+const MAX_VALUES = 3;
+
+export default function CareerValueAutocomplete({ values, onChange }: Props) {
+  const [inputValue, setInputValue] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -17,28 +19,29 @@ export default function CareerValueAutocomplete({ value, onChange }: Props) {
   const filteredOptions = CAREER_VALUES.filter((option) =>
     option.toLowerCase().includes(inputValue.toLowerCase())
   );
+  const availableOptions = filteredOptions.filter(
+    (option) => !values.includes(option)
+  );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setInputValue(newValue);
     setIsOpen(true);
     setHighlightedIndex(-1);
-
-    // Clear selection if input doesn't match a valid option
-    if (!CAREER_VALUES.includes(newValue as typeof CAREER_VALUES[number])) {
-      onChange('');
-    }
   };
 
   const handleSelect = useCallback(
     (option: string) => {
-      setInputValue(option);
-      onChange(option);
+      if (values.includes(option) || values.length >= MAX_VALUES) {
+        return;
+      }
+      setInputValue('');
+      onChange([...values, option]);
       setIsOpen(false);
       setHighlightedIndex(-1);
       inputRef.current?.blur();
     },
-    [onChange]
+    [onChange, values]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -53,7 +56,7 @@ export default function CareerValueAutocomplete({ value, onChange }: Props) {
       case 'ArrowDown':
         e.preventDefault();
         setHighlightedIndex((prev) =>
-          prev < filteredOptions.length - 1 ? prev + 1 : prev
+          prev < availableOptions.length - 1 ? prev + 1 : prev
         );
         break;
       case 'ArrowUp':
@@ -62,8 +65,8 @@ export default function CareerValueAutocomplete({ value, onChange }: Props) {
         break;
       case 'Enter':
         e.preventDefault();
-        if (highlightedIndex >= 0 && highlightedIndex < filteredOptions.length) {
-          handleSelect(filteredOptions[highlightedIndex]);
+        if (highlightedIndex >= 0 && highlightedIndex < availableOptions.length) {
+          handleSelect(availableOptions[highlightedIndex]);
         }
         break;
       case 'Escape':
@@ -101,7 +104,8 @@ export default function CareerValueAutocomplete({ value, onChange }: Props) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const isSelected = CAREER_VALUES.includes(value as typeof CAREER_VALUES[number]);
+  const isSelected = values.length > 0;
+  const isAtLimit = values.length >= MAX_VALUES;
 
   return (
     <div ref={containerRef} className="relative">
@@ -109,8 +113,30 @@ export default function CareerValueAutocomplete({ value, onChange }: Props) {
         htmlFor="career-value-input"
         className="block text-sm font-semibold text-[#404040] mb-2"
       >
-        Select your top career value
+        Select your top career values
       </label>
+      {values.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {values.map((value) => (
+            <div
+              key={value}
+              className="flex items-center gap-2 bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium"
+            >
+              <span>{value}</span>
+              <button
+                type="button"
+                onClick={() =>
+                  onChange(values.filter((selected) => selected !== value))
+                }
+                className="text-[#00693E] hover:text-[#003D1C] transition-colors"
+                aria-label={`Remove ${value}`}
+              >
+                x
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="relative">
         <input
           ref={inputRef}
@@ -120,7 +146,8 @@ export default function CareerValueAutocomplete({ value, onChange }: Props) {
           onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder="Start typing to search..."
+          placeholder={isAtLimit ? 'You have selected 3 values' : 'Start typing to search...'}
+          disabled={isAtLimit}
           role="combobox"
           aria-expanded={isOpen}
           aria-haspopup="listbox"
@@ -139,6 +166,7 @@ export default function CareerValueAutocomplete({ value, onChange }: Props) {
             transition-colors duration-200
             ${isSelected ? 'border-[#00693E]' : 'border-[#D4D4D4]'}
             focus:border-[#00693E]
+            ${isAtLimit ? 'bg-[#F5F5F5] text-[#737373]' : ''}
           `}
         />
         {isSelected && (
@@ -160,7 +188,7 @@ export default function CareerValueAutocomplete({ value, onChange }: Props) {
         )}
       </div>
 
-      {isOpen && filteredOptions.length > 0 && (
+      {isOpen && availableOptions.length > 0 && !isAtLimit && (
         <ul
           ref={listRef}
           id="career-value-listbox"
@@ -173,12 +201,12 @@ export default function CareerValueAutocomplete({ value, onChange }: Props) {
             shadow-lg
           "
         >
-          {filteredOptions.map((option, index) => (
+          {availableOptions.map((option, index) => (
             <li
               key={option}
               id={`career-value-option-${index}`}
               role="option"
-              aria-selected={option === value}
+              aria-selected={values.includes(option)}
               onClick={() => handleSelect(option)}
               className={`
                 px-4 py-3 cursor-pointer
@@ -189,11 +217,11 @@ export default function CareerValueAutocomplete({ value, onChange }: Props) {
                     ? 'bg-[#F5F5F5]'
                     : 'hover:bg-[#F5F5F5]'
                 }
-                ${option === value ? 'text-[#00693E] font-semibold' : 'text-[#262626]'}
+                ${values.includes(option) ? 'text-[#00693E] font-semibold' : 'text-[#262626]'}
               `}
             >
               <span>{option}</span>
-              {option === value && (
+              {values.includes(option) && (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -214,7 +242,7 @@ export default function CareerValueAutocomplete({ value, onChange }: Props) {
         </ul>
       )}
 
-      {isOpen && filteredOptions.length === 0 && inputValue && (
+      {isOpen && filteredOptions.length === 0 && inputValue && !isAtLimit && (
         <div className="absolute z-10 w-full mt-1 px-4 py-3 bg-white border border-[#E5E5E5] rounded-md shadow-lg text-[#525252]">
           No matching career values found
         </div>

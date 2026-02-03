@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     # Rate limiting (per IP)
     rate_limit_default_max_requests: int = 60
     rate_limit_default_window_seconds: int = 60
-    rate_limit_ai_max_requests: int = 2
+    rate_limit_ai_max_requests: int = 3
     rate_limit_ai_window_seconds: int = 60
 
     class Config:
