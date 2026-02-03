@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import resume, export, narrative
+from app.routers import resume, export, narrative, word
 from app.config.settings import settings
 from app.middleware.rate_limit import RateLimiter, SimpleRateLimitMiddleware
 
@@ -33,6 +33,7 @@ app.add_middleware(
 app.include_router(resume.router, prefix="/api", tags=["resume"])
 app.include_router(export.router, prefix="/api/export", tags=["export"])
 app.include_router(narrative.router, prefix="/api", tags=["narrative"])
+app.include_router(word.router, prefix="/api", tags=["word"])
 
 
 @app.get("/")

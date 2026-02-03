@@ -41,7 +41,7 @@ export default function WordStep({ value, onComplete, onBack }: Props) {
       onBack={onBack}
       canContinue={isValid}
       stepNumber={3}
-      totalSteps={4}
+      totalSteps={5}
     >
       <div>
         <label

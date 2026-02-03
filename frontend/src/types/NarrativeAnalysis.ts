@@ -8,6 +8,7 @@ export interface ExperienceSuggestion {
 
 export interface NarrativeResponse {
   paragraph: string;
+  interviewParagraph: string;
   bullets: string[];
   experienceSuggestions: ExperienceSuggestion[];
 }

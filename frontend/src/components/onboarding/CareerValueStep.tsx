@@ -22,7 +22,7 @@ export default function CareerValueStep({ values, onComplete, onBack }: Props) {
       onBack={onBack}
       canContinue={isValid}
       stepNumber={4}
-      totalSteps={4}
+      totalSteps={5}
     >
       <div>
         <CareerValueAutocomplete values={selectedValues} onChange={setSelectedValues} />

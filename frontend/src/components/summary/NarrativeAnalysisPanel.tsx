@@ -14,6 +14,7 @@ interface Props {
   word: string;
   careerValue: string;
   onRetry: () => void;
+  showDetails?: boolean;
 }
 
 const alignmentConfig = {
@@ -109,16 +110,21 @@ export default function NarrativeAnalysisPanel({
   word,
   careerValue,
   onRetry,
+  showDetails = false,
 }: Props) {
+  const interviewText =
+    narrativeState.status === "success"
+      ? narrativeState.data.interviewParagraph || narrativeState.data.paragraph
+      : "";
   return (
     <div className="bg-white border border-[#E5E5E5] rounded-md">
       {/* Header */}
       <div className="px-8 py-6 border-b border-[#E5E5E5]">
         <h3 className="font-serif text-2xl text-[#262626]">
-          Your Narrative Strategy
+          Your Interview Answer
         </h3>
         <p className="text-[#525252] mt-2">
-          Personalized guidance based on your workshop journey
+          A draft response to "Tell me about yourself"
         </p>
         <div className="flex flex-wrap items-center gap-2 mt-3">
           <span className="text-[#737373] text-sm">Value focus:</span>
@@ -158,14 +164,13 @@ export default function NarrativeAnalysisPanel({
 
         {narrativeState.status === "success" && (
           <>
-            {/* Word and Value Pills - at top */}
             {/* Paragraph Content */}
             <p className="text-[#404040] leading-relaxed text-[15px]">
-              {narrativeState.data.paragraph}
+              {interviewText}
             </p>
 
             {/* Bullets Section */}
-            {narrativeState.data.bullets.length > 0 && (
+            {showDetails && narrativeState.data.bullets.length > 0 && (
               <div className="border-t border-[#E5E5E5] mt-6 pt-6">
                 <h4 className="font-serif text-lg text-[#262626] mb-4">
                   How to tell your story:
@@ -185,7 +190,7 @@ export default function NarrativeAnalysisPanel({
             )}
 
             {/* Experience-Specific Suggestions */}
-            {narrativeState.data.experienceSuggestions.length > 0 && (
+            {showDetails && narrativeState.data.experienceSuggestions.length > 0 && (
               <div className="border-t border-[#E5E5E5] mt-6 pt-6">
                 <h4 className="font-serif text-lg text-[#262626] mb-2">
                   Experience-Specific Guidance

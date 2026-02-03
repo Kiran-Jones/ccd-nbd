@@ -64,12 +64,15 @@ export const generateNarrative = async (
     sentence: "",
     word: "",
     careerValues: [],
+    finalWord: "",
   };
+  const word = baseOnboarding.finalWord || baseOnboarding.word;
   const payload = careerValue
     ? {
         ...result,
         onboardingData: {
           ...baseOnboarding,
+          word,
           careerValue,
           careerValues: baseOnboarding.careerValues.length
             ? baseOnboarding.careerValues
@@ -81,3 +84,9 @@ export const generateNarrative = async (
   return response.data;
 };
 
+export const generateFinalWord = async (
+  bullets: string[]
+): Promise<{ word: string }> => {
+  const response = await api.post("/word", { bullets });
+  return response.data;
+};

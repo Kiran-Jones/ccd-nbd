@@ -3,4 +3,5 @@ export interface OnboardingData {
   sentence: string;
   word: string;
   careerValues: string[];
+  finalWord?: string;
 }

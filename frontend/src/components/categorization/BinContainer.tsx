@@ -21,6 +21,7 @@ interface Props {
   onUncategorizedChange: (bullets: BulletPoint[]) => void;
   onTotalChange: (total: number) => void;
   onComplete: () => void;
+  onBack: () => void;
 }
 
 // Helper to check if a bullet is a duplicate
@@ -34,6 +35,7 @@ export default function BinContainer({
   onUncategorizedChange,
   onTotalChange,
   onComplete,
+  onBack,
 }: Props) {
   const [activeBullet, setActiveBullet] = useState<BulletPoint | null>(null);
 
@@ -120,13 +122,6 @@ export default function BinContainer({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      {/* Header with View Summary button */}
-      <div className="flex justify-center mb-1">
-        <Button onClick={onComplete} disabled={!canComplete}>
-          View Summary
-        </Button>
-      </div>
-
       {/* Diamond Layout Container */}
       <div className="relative">
         {/* Grid layout for corners and center */}
@@ -212,6 +207,15 @@ export default function BinContainer({
           </div>
         )}
       </DragOverlay>
+
+      <div className="flex justify-between items-center mt-6">
+        <Button variant="secondary" onClick={onBack}>
+          Back
+        </Button>
+        <Button onClick={onComplete} disabled={!canComplete}>
+          View Summary
+        </Button>
+      </div>
     </DndContext>
   );
 }

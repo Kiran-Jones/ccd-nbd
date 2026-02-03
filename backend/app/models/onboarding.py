@@ -8,3 +8,4 @@ class OnboardingData(BaseModel):
     word: str
     careerValues: List[str] = []
     careerValue: Optional[str] = None
+    finalWord: Optional[str] = None

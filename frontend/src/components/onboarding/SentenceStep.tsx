@@ -31,7 +31,7 @@ export default function SentenceStep({ value, onComplete, onBack }: Props) {
       onBack={onBack}
       canContinue={isValid}
       stepNumber={2}
-      totalSteps={4}
+      totalSteps={5}
     >
       <div>
         <label

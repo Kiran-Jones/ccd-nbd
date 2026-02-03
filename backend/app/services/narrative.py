@@ -21,6 +21,7 @@ class ExperienceSuggestion(BaseModel):
 
 class NarrativeResponse(BaseModel):
     paragraph: str
+    interviewParagraph: str = ""
     bullets: List[str]
     experienceSuggestions: List[ExperienceSuggestion] = []
 
@@ -73,19 +74,22 @@ class NarrativeService:
                 ],
                 experienceSuggestions=[],
             )
+        word = onboarding.finalWord or onboarding.word
         distribution_summary = self._format_distribution(analysis)
         experiences_detailed = self._format_experiences_detailed(analysis)
 
         system_prompt = """You are a career storytelling strategist helping students at Dartmouth College's Center for Career Design craft their professional narrative.
 
-Your role is to analyze SPECIFIC EXPERIENCES from the student's resume and provide personalized reframing suggestions based on their self-identified word and career value.
+Your role is to analyze SPECIFIC EXPERIENCES from the student's resume and provide personalized reframing suggestions based on their self-identified word and career value, with the CAREER VALUE as the primary lens and the WORD as a supporting lens.
 
 You must:
-1. Analyze each experience through the lens of the student's defining WORD
-2. Identify which experiences strongly align, moderately align, or weakly align with their word
+1. Analyze each experience primarily through the lens of the student's CAREER VALUE, and secondarily through their defining WORD
+2. Identify which experiences strongly align, moderately align, or weakly align with their career value (use the word as nuance, not the main driver)
 3. For experiences that don't strongly align, suggest how to REFRAME the narrative (not rewrite the resume bullet, but how to TALK about it)
-4. Connect patterns to their career value
-5. Write directly to the student using second person ("you"), avoiding phrases like "this student"
+4. Connect patterns to their career value and how the word reinforces that value
+5. Make the paragraph and bullets clearly distinct across different career values, even when the word stays the same
+6. Provide an interview-style paragraph response that sounds natural when spoken aloud
+7. Write directly to the student using second person ("you"), avoiding phrases like "this student"
 
 CRITICAL CONSTRAINTS:
 - Do NOT suggest resume rewrites or edits to the bullet text itself
@@ -95,8 +99,9 @@ CRITICAL CONSTRAINTS:
 
 Respond with valid JSON in this exact format:
 {
-  "paragraph": "2-3 sentences analyzing how their word connects to their experience patterns and what story emerges",
-  "bullets": ["3-4 high-level storytelling strategies specific to their profile"],
+  "paragraph": "2-3 sentences analyzing how their career value connects to their experience patterns, with the word as a supporting theme",
+  "interviewParagraph": "A single-paragraph answer to 'Tell me about yourself / walk me through your resume' that is 50-1200 characters",
+  "bullets": ["3-4 high-level storytelling strategies grounded in their career value and reinforced by their word"],
   "experienceSuggestions": [
     {
       "original": "The exact text of the experience bullet",
@@ -112,12 +117,12 @@ For experienceSuggestions:
 - Include 3-6 experiences that would most benefit from analysis
 - Prioritize experiences with weak or moderate alignment that have reframing potential
 - Include at least 1 strong alignment as a positive example
-- The "reframe" should be a verbal framing suggestion, like "When discussing this, emphasize how you served as a [WORD] by..."
+- The "reframe" should be a verbal framing suggestion, like "When discussing this, emphasize how this experience expresses your [VALUE] while showing you are a [WORD]..."
 - Keep explanations concise (1-2 sentences)"""
 
         user_prompt = f"""Student's Workshop Journey:
 
-DEFINING WORD: {onboarding.word}
+DEFINING WORD: {word}
 CAREER VALUE: {career_value}
 
 SELF-DESCRIPTION: {onboarding.paragraph}
@@ -132,10 +137,10 @@ TOP CATEGORY: {analysis.analytics.top_category}
 DETAILED EXPERIENCES BY CATEGORY:
 {experiences_detailed}
 
-Analyze these specific experiences through the lens of "{onboarding.word}" and provide reframing suggestions for experiences that don't naturally align with this word. Help the student see how to tell their story consistently around "{onboarding.word}" even when the original experience framing doesn't emphasize it."""
+Analyze these specific experiences through the lens of "{career_value}" first, and "{word}" second. Provide reframing suggestions for experiences that don't naturally align with "{career_value}", while still connecting back to "{word}" as a supporting theme. Ensure the summary meaningfully changes when the career value changes."""
 
         logger.info(
-            f"Generating narrative for word: {onboarding.word}, value: {career_value}"
+            f"Generating narrative for word: {word}, value: {career_value}"
         )
         logger.debug(f"Experiences to analyze:\n{experiences_detailed}")
 
@@ -155,6 +160,10 @@ Analyze these specific experiences through the lens of "{onboarding.word}" and p
         result = json.loads(content)
         if isinstance(result.get("paragraph"), str):
             result["paragraph"] = result["paragraph"].replace("this student", "you")
+        if isinstance(result.get("interviewParagraph"), str):
+            result["interviewParagraph"] = result["interviewParagraph"].replace(
+                "this student", "you"
+            )
 
         experience_suggestions = []
         for exp in result.get("experienceSuggestions", []):
@@ -170,6 +179,7 @@ Analyze these specific experiences through the lens of "{onboarding.word}" and p
 
         return NarrativeResponse(
             paragraph=result.get("paragraph", ""),
+            interviewParagraph=result.get("interviewParagraph", ""),
             bullets=result.get("bullets", []),
             experienceSuggestions=experience_suggestions,
         )

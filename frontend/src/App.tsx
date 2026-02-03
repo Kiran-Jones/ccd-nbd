@@ -16,7 +16,16 @@ import ParagraphStep from "./components/onboarding/ParagraphStep";
 import SentenceStep from "./components/onboarding/SentenceStep";
 import WordStep from "./components/onboarding/WordStep";
 import CareerValueStep from "./components/onboarding/CareerValueStep";
-import { exportJSON, exportPDF, downloadBlob, generateNarrative, pingHealth } from "./services/api";
+import WelcomeStep from "./components/onboarding/WelcomeStep";
+import FinalWordStep from "./components/final-word/FinalWordStep";
+import {
+  exportJSON,
+  exportPDF,
+  downloadBlob,
+  generateNarrative,
+  generateFinalWord,
+  pingHealth,
+} from "./services/api";
 import Button from "./components/common/Button";
 
 type NarrativeState =
@@ -26,6 +35,7 @@ type NarrativeState =
   | { status: "error"; message: string };
 
 type AppPhase =
+  | "welcome"
   | "paragraph"
   | "sentence"
   | "word"
@@ -33,10 +43,11 @@ type AppPhase =
   | "upload"
   | "preview"
   | "categorize"
+  | "finalWord"
   | "summary";
 
 function App() {
-  const [phase, setPhase] = useState<AppPhase>("paragraph");
+  const [phase, setPhase] = useState<AppPhase>("welcome");
   const [bullets, setBullets] = useState<BulletPoint[]>([]);
   const [uncategorized, setUncategorized] = useState<BulletPoint[]>([]);
   const [bins, setBins] = useState<Bin[]>(
@@ -53,13 +64,25 @@ function App() {
     sentence: "",
     word: "",
     careerValues: [],
+    finalWord: "",
   });
   const [narrativeStates, setNarrativeStates] = useState<
     Record<string, NarrativeState>
   >({});
+  const [finalParagraph, setFinalParagraph] = useState("");
+  const showSummaryDetails = false;
+  const [aiWordState, setAiWordState] = useState<
+    | { status: "idle" }
+    | { status: "loading" }
+    | { status: "success"; word: string }
+    | { status: "error" }
+  >({ status: "idle" });
   const hasWokenBackend = useRef(false);
+  const MIN_FINAL_PARAGRAPH_CHARS = 50;
+  const MAX_FINAL_PARAGRAPH_CHARS = 1200;
 
   const isOnboardingPhase = [
+    "welcome",
     "paragraph",
     "sentence",
     "word",
@@ -76,6 +99,7 @@ function App() {
     }
     setOnboardingData((prev) => ({ ...prev, [field]: value }));
     const phaseOrder: AppPhase[] = [
+      "welcome",
       "paragraph",
       "sentence",
       "word",
@@ -90,6 +114,7 @@ function App() {
 
   const handleOnboardingBack = () => {
     const phaseOrder: AppPhase[] = [
+      "welcome",
       "paragraph",
       "sentence",
       "word",
@@ -110,6 +135,18 @@ function App() {
   const handlePreviewConfirmed = (editedBullets: BulletPoint[]) => {
     setUncategorized(editedBullets);
     setTotalBullets(editedBullets.length);
+    if (editedBullets.length > 0) {
+      setAiWordState({ status: "loading" });
+      generateFinalWord(editedBullets.map((bullet) => bullet.text))
+        .then((result) => {
+          setAiWordState({ status: "success", word: result.word });
+        })
+        .catch(() => {
+          setAiWordState({ status: "error" });
+        });
+    } else {
+      setAiWordState({ status: "error" });
+    }
     setPhase("categorize");
   };
 
@@ -166,8 +203,24 @@ function App() {
       onboardingData,
     };
     setAnalysisResult(result);
-    setPhase("summary");
-    fetchNarratives(result);
+    setPhase("finalWord");
+    setNarrativeStates({});
+  };
+
+  const handleFinalWordComplete = (word: string) => {
+    const updatedOnboarding = { ...onboardingData, finalWord: word };
+    setOnboardingData(updatedOnboarding);
+    if (analysisResult) {
+      const result = {
+        ...analysisResult,
+        onboardingData: updatedOnboarding,
+      };
+      setAnalysisResult(result);
+      setPhase("summary");
+      fetchNarratives(result);
+    } else {
+      setPhase("summary");
+    }
   };
 
   const handleNarrativeRetry = (value: string) => {
@@ -177,6 +230,7 @@ function App() {
         sentence: "",
         word: "",
         careerValues: [],
+        finalWord: "",
       };
       fetchNarratives({
         ...analysisResult,
@@ -275,7 +329,7 @@ function App() {
   };
 
   const handleReset = () => {
-    setPhase("paragraph");
+    setPhase("welcome");
     setBullets([]);
     setUncategorized([]);
     setBins(BINS.map((config) => ({ ...config, bullets: [] })));
@@ -287,8 +341,11 @@ function App() {
       sentence: "",
       word: "",
       careerValues: [],
+      finalWord: "",
     });
     setNarrativeStates({});
+    setAiWordState({ status: "idle" });
+    setFinalParagraph("");
   };
 
   // Step indicator for visual progress
@@ -296,7 +353,8 @@ function App() {
     { id: "upload", label: "Upload" },
     { id: "preview", label: "Review" },
     { id: "categorize", label: "Categorize" },
-    { id: "summary", label: "Summary" },
+    { id: "finalWord", label: "Finalize Word" },
+    { id: "summary", label: "Rewrite" },
   ];
   const currentStepIndex = steps.findIndex((s) => s.id === phase);
 
@@ -393,7 +451,7 @@ function App() {
         className={`flex-1 ${phase === "categorize" ? "py-2 md:py-4" : "py-12"}`}
       >
         <div
-          className={`mx-auto px-6 ${phase === "preview" || phase === "summary" ? "max-w-7xl" : isOnboardingPhase ? "max-w-4xl" : "max-w-6xl"}`}
+          className={`mx-auto px-6 ${phase === "preview" || phase === "summary" ? "max-w-7xl" : isOnboardingPhase || phase === "finalWord" ? "max-w-4xl" : "max-w-6xl"}`}
         >
           {/* Phase Title */}
           {phase === "upload" && (
@@ -435,22 +493,27 @@ function App() {
           {phase === "summary" && (
             <div className="text-center mb-8">
               <h2 className="font-serif text-3xl text-[#262626] mb-3">
-                Your Career Profile
+                Rewrite Your Story
               </h2>
               <p className="text-[#525252] max-w-2xl mx-auto">
-                Here's what your experiences reveal about your professional
-                identity.
+                Draft your interview-ready response to "Tell me about yourself"
+                using the value-focused perspectives below.
               </p>
             </div>
           )}
 
           {/* Phase Content */}
+          {phase === "welcome" && (
+            <WelcomeStep onContinue={() => setPhase("paragraph")} />
+          )}
+
           {phase === "paragraph" && (
             <ParagraphStep
               value={onboardingData.paragraph}
               onComplete={(value) =>
                 handleOnboardingStepComplete("paragraph", value)
               }
+              onBack={() => setPhase("welcome")}
             />
           )}
 
@@ -485,7 +548,15 @@ function App() {
           )}
 
           {phase === "upload" && (
-            <FileUpload onFileUploaded={handleFileUploaded} />
+            <div className="space-y-8">
+              <FileUpload onFileUploaded={handleFileUploaded} />
+              <div className="flex justify-between">
+                <Button variant="secondary" onClick={() => setPhase("careerValue")}>
+                  Back
+                </Button>
+                <div />
+              </div>
+            </div>
           )}
 
           {phase === "preview" && (
@@ -506,15 +577,25 @@ function App() {
               onUncategorizedChange={setUncategorized}
               onTotalChange={setTotalBullets}
               onComplete={handleCategorizationComplete}
+              onBack={() => setPhase("preview")}
+            />
+          )}
+
+          {phase === "finalWord" && (
+            <FinalWordStep
+              originalWord={onboardingData.word}
+              suggestedState={aiWordState}
+              onComplete={handleFinalWordComplete}
+              onBack={() => setPhase("categorize")}
             />
           )}
 
           {phase === "summary" && analysisResult && (
             <div className="space-y-8">
               <div className="border-t border-[#E5E5E5] pt-6 flex flex-wrap items-center gap-3 justify-center">
-                <span className="text-[#737373] text-sm">Your word:</span>
+                <span className="text-[#737373] text-sm">Selected word:</span>
                 <span className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium">
-                  {onboardingData.word}
+                  {onboardingData.finalWord || onboardingData.word}
                 </span>
               </div>
               {onboardingData.careerValues.length > 0 && (
@@ -533,48 +614,125 @@ function App() {
                       narrativeState={
                         narrativeStates[value] || { status: "idle" }
                       }
-                      word={onboardingData.word}
+                      word={onboardingData.finalWord || onboardingData.word}
                       careerValue={value}
                       onRetry={() => handleNarrativeRetry(value)}
                     />
                   ))}
                 </div>
               )}
-              <DistributionChart
-                analytics={analysisResult.analytics}
-                bins={bins}
-              />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <BinList bins={bins} />
-                <InsightsPanel analytics={analysisResult.analytics} />
-              </div>
 
-              {/* Export Actions */}
-              <div className="bg-white border border-[#E5E5E5] rounded-md p-8">
-                <div className="text-center">
-                  <h3 className="font-serif text-xl text-[#262626] mb-2">
-                    Save Your Analysis
-                  </h3>
-                  <p className="text-[#525252] mb-6">
-                    Download your career profile for future reference or
-                    sharing.
-                  </p>
-                  <div className="flex gap-4 justify-center">
-                    <Button
-                      variant="secondary"
-                      onClick={handleExportJSON}
-                      disabled={exporting !== null}
+              <div className="bg-white border border-[#E5E5E5] rounded-md p-8 text-center">
+                <h3 className="font-serif text-xl text-[#262626] mb-2">
+                  Write Your Final Paragraph
+                </h3>
+                <p className="text-[#525252] mb-6 max-w-2xl mx-auto">
+                  Use the prompts above to craft a single, authentic paragraph
+                  in your own words.
+                </p>
+                <div className="max-w-3xl mx-auto text-left">
+                  <label
+                    htmlFor="final-paragraph"
+                    className="block text-sm font-semibold text-[#404040] mb-2"
+                  >
+                    Your final response
+                  </label>
+                  <textarea
+                    id="final-paragraph"
+                    value={finalParagraph}
+                    onChange={(event) => {
+                      if (event.target.value.length <= MAX_FINAL_PARAGRAPH_CHARS) {
+                        setFinalParagraph(event.target.value);
+                      }
+                    }}
+                    placeholder="I am a professional who..."
+                    rows={6}
+                    className={`
+                      w-full px-4 py-3 rounded
+                      border text-base font-sans
+                      placeholder:text-[#A3A3A3]
+                      focus:outline-none focus:ring-2 focus:ring-[#00693E]/10
+                      transition-colors duration-200
+                      resize-none
+                      ${
+                        finalParagraph.length > 0 &&
+                        finalParagraph.length < MIN_FINAL_PARAGRAPH_CHARS
+                          ? "border-[#9D162E] focus:border-[#9D162E]"
+                          : "border-[#D4D4D4] focus:border-[#00693E]"
+                      }
+                    `}
+                  />
+                  <div className="flex justify-between mt-2">
+                    <span
+                      className={`text-sm ${
+                        finalParagraph.length > 0 &&
+                        finalParagraph.length < MIN_FINAL_PARAGRAPH_CHARS
+                          ? "text-[#9D162E]"
+                          : "text-[#525252]"
+                      }`}
                     >
-                      {exporting === "json" ? "Exporting..." : "Download JSON"}
-                    </Button>
-                    <Button
-                      onClick={handleExportPDF}
-                      disabled={exporting !== null}
+                      {finalParagraph.length < MIN_FINAL_PARAGRAPH_CHARS
+                        ? `${MIN_FINAL_PARAGRAPH_CHARS - finalParagraph.length} more characters needed`
+                        : "Looking good!"}
+                    </span>
+                    <span
+                      className={`text-sm ${
+                        finalParagraph.length > MAX_FINAL_PARAGRAPH_CHARS * 0.9
+                          ? "text-[#9D162E]"
+                          : "text-[#525252]"
+                      }`}
                     >
-                      {exporting === "pdf" ? "Exporting..." : "Download PDF"}
-                    </Button>
+                      {finalParagraph.length}/{MAX_FINAL_PARAGRAPH_CHARS}
+                    </span>
                   </div>
                 </div>
+              </div>
+
+              {showSummaryDetails && (
+                <>
+                  <DistributionChart
+                    analytics={analysisResult.analytics}
+                    bins={bins}
+                  />
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <BinList bins={bins} />
+                    <InsightsPanel analytics={analysisResult.analytics} />
+                  </div>
+
+                  {/* Export Actions */}
+                  <div className="bg-white border border-[#E5E5E5] rounded-md p-8">
+                    <div className="text-center">
+                      <h3 className="font-serif text-xl text-[#262626] mb-2">
+                        Save Your Analysis
+                      </h3>
+                      <p className="text-[#525252] mb-6">
+                        Download your career profile for future reference or
+                        sharing.
+                      </p>
+                      <div className="flex gap-4 justify-center">
+                        <Button
+                          variant="secondary"
+                          onClick={handleExportJSON}
+                          disabled={exporting !== null}
+                        >
+                          {exporting === "json" ? "Exporting..." : "Download JSON"}
+                        </Button>
+                        <Button
+                          onClick={handleExportPDF}
+                          disabled={exporting !== null}
+                        >
+                          {exporting === "pdf" ? "Exporting..." : "Download PDF"}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+              <div className="flex justify-between">
+                <Button variant="secondary" onClick={() => setPhase("finalWord")}>
+                  Back
+                </Button>
+                <div />
               </div>
             </div>
           )}

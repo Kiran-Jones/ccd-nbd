@@ -4,12 +4,13 @@ import OnboardingStep from "./OnboardingStep";
 interface Props {
   value: string;
   onComplete: (value: string) => void;
+  onBack: () => void;
 }
 
 const MIN_CHARS = 50;
 const MAX_CHARS = 1200;
 
-export default function ParagraphStep({ value, onComplete }: Props) {
+export default function ParagraphStep({ value, onComplete, onBack }: Props) {
   const [text, setText] = useState(value);
 
   const charCount = text.length;
@@ -27,9 +28,10 @@ export default function ParagraphStep({ value, onComplete }: Props) {
       title="Tell Us About Yourself"
       subtitle="Write a brief paragraph describing who you are professionally and what drives you."
       onContinue={() => onComplete(text)}
+      onBack={onBack}
       canContinue={isValid}
       stepNumber={1}
-      totalSteps={4}
+      totalSteps={5}
     >
       <div>
         <label
