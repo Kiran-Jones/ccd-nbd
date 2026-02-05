@@ -7,5 +7,7 @@ class OnboardingData(BaseModel):
     sentence: str
     word: str
     careerValues: List[str] = []
+    careerSkills: List[str] = []
+    careerStrengths: List[str] = []
     careerValue: Optional[str] = None
     finalWord: Optional[str] = None

@@ -68,7 +68,7 @@ class NarrativeService:
             return NarrativeResponse(
                 paragraph="Select at least one career value to receive personalized narrative guidance.",
                 bullets=[
-                    "Choose up to three career values",
+                    "Choose exactly two career values",
                     "Identify your defining word",
                     "Categorize your experiences",
                 ],
@@ -80,7 +80,7 @@ class NarrativeService:
 
         system_prompt = """You are a career storytelling strategist helping students at Dartmouth College's Center for Career Design craft their professional narrative.
 
-Your role is to analyze SPECIFIC EXPERIENCES from the student's resume and provide personalized reframing suggestions based on their self-identified word and career value, with the CAREER VALUE as the primary lens and the WORD as a supporting lens.
+Your role is to analyze SPECIFIC EXPERIENCES from the student's resume and provide personalized reframing suggestions based on their self-identified word and career value, with the CAREER VALUE as the primary lens, the WORD as a supporting lens, and their top SKILLS and STRENGTHS as additional context.
 
 You must:
 1. Analyze each experience primarily through the lens of the student's CAREER VALUE, and secondarily through their defining WORD
@@ -120,10 +120,17 @@ For experienceSuggestions:
 - The "reframe" should be a verbal framing suggestion, like "When discussing this, emphasize how this experience expresses your [VALUE] while showing you are a [WORD]..."
 - Keep explanations concise (1-2 sentences)"""
 
+        skills = onboarding.careerSkills or []
+        strengths = onboarding.careerStrengths or []
+        skills_text = ", ".join(skills) if skills else "None provided"
+        strengths_text = ", ".join(strengths) if strengths else "None provided"
+
         user_prompt = f"""Student's Workshop Journey:
 
 DEFINING WORD: {word}
 CAREER VALUE: {career_value}
+TOP SKILLS: {skills_text}
+TOP STRENGTHS: {strengths_text}
 
 SELF-DESCRIPTION: {onboarding.paragraph}
 
@@ -137,7 +144,7 @@ TOP CATEGORY: {analysis.analytics.top_category}
 DETAILED EXPERIENCES BY CATEGORY:
 {experiences_detailed}
 
-Analyze these specific experiences through the lens of "{career_value}" first, and "{word}" second. Provide reframing suggestions for experiences that don't naturally align with "{career_value}", while still connecting back to "{word}" as a supporting theme. Ensure the summary meaningfully changes when the career value changes."""
+Analyze these specific experiences through the lens of "{career_value}" first, and "{word}" second. Use the student's top skills and strengths as supporting context. Provide reframing suggestions for experiences that don't naturally align with "{career_value}", while still connecting back to "{word}" as a supporting theme. Ensure the summary meaningfully changes when the career value changes."""
 
         logger.info(
             f"Generating narrative for word: {word}, value: {career_value}"

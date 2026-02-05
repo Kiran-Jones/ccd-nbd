@@ -64,6 +64,8 @@ export const generateNarrative = async (
     sentence: "",
     word: "",
     careerValues: [],
+    careerSkills: [],
+    careerStrengths: [],
     finalWord: "",
   };
   const word = baseOnboarding.finalWord || baseOnboarding.word;

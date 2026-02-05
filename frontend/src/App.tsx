@@ -44,7 +44,8 @@ type AppPhase =
   | "preview"
   | "categorize"
   | "finalWord"
-  | "summary";
+  | "summary"
+  | "finalReflection";
 
 function App() {
   const [phase, setPhase] = useState<AppPhase>("welcome");
@@ -64,6 +65,8 @@ function App() {
     sentence: "",
     word: "",
     careerValues: [],
+    careerSkills: [],
+    careerStrengths: [],
     finalWord: "",
   });
   const [narrativeStates, setNarrativeStates] = useState<
@@ -110,6 +113,15 @@ function App() {
     if (currentIndex < phaseOrder.length - 1) {
       setPhase(phaseOrder[currentIndex + 1]);
     }
+  };
+
+  const handleCareerSelectionsComplete = (payload: {
+    careerValues: string[];
+    careerSkills: string[];
+    careerStrengths: string[];
+  }) => {
+    setOnboardingData((prev) => ({ ...prev, ...payload }));
+    setPhase("upload");
   };
 
   const handleOnboardingBack = () => {
@@ -230,6 +242,8 @@ function App() {
         sentence: "",
         word: "",
         careerValues: [],
+        careerSkills: [],
+        careerStrengths: [],
         finalWord: "",
       };
       fetchNarratives({
@@ -341,6 +355,8 @@ function App() {
       sentence: "",
       word: "",
       careerValues: [],
+      careerSkills: [],
+      careerStrengths: [],
       finalWord: "",
     });
     setNarrativeStates({});
@@ -355,6 +371,7 @@ function App() {
     { id: "categorize", label: "Categorize" },
     { id: "finalWord", label: "Finalize Word" },
     { id: "summary", label: "Rewrite" },
+    { id: "finalReflection", label: "Reflect" },
   ];
   const currentStepIndex = steps.findIndex((s) => s.id === phase);
 
@@ -451,7 +468,13 @@ function App() {
         className={`flex-1 ${phase === "categorize" ? "py-2 md:py-4" : "py-12"}`}
       >
         <div
-          className={`mx-auto px-6 ${phase === "preview" || phase === "summary" ? "max-w-7xl" : isOnboardingPhase || phase === "finalWord" ? "max-w-4xl" : "max-w-6xl"}`}
+          className={`mx-auto px-6 ${
+            phase === "preview" || phase === "summary" || phase === "finalReflection"
+              ? "max-w-7xl"
+              : isOnboardingPhase || phase === "finalWord"
+                ? "max-w-4xl"
+                : "max-w-6xl"
+          }`}
         >
           {/* Phase Title */}
           {phase === "upload" && (
@@ -540,9 +563,9 @@ function App() {
           {phase === "careerValue" && (
             <CareerValueStep
               values={onboardingData.careerValues}
-              onComplete={(value) =>
-                handleOnboardingStepComplete("careerValues", value)
-              }
+              skills={onboardingData.careerSkills}
+              strengths={onboardingData.careerStrengths}
+              onComplete={handleCareerSelectionsComplete}
               onBack={handleOnboardingBack}
             />
           )}
@@ -592,11 +615,43 @@ function App() {
 
           {phase === "summary" && analysisResult && (
             <div className="space-y-8">
-              <div className="border-t border-[#E5E5E5] pt-6 flex flex-wrap items-center gap-3 justify-center">
-                <span className="text-[#737373] text-sm">Selected word:</span>
-                <span className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium">
-                  {onboardingData.finalWord || onboardingData.word}
-                </span>
+              <div className="border-t border-[#E5E5E5] pt-6 flex flex-col gap-3 items-center text-center">
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <span className="text-[#737373] text-sm">Defining word:</span>
+                  <span className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium">
+                    {onboardingData.finalWord || onboardingData.word}
+                  </span>
+                </div>
+                {onboardingData.careerSkills.length > 0 && (
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <span className="text-[#737373] text-sm">
+                      Top skills:
+                    </span>
+                    {onboardingData.careerSkills.map((skill) => (
+                      <span
+                        key={skill}
+                        className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {onboardingData.careerStrengths.length > 0 && (
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <span className="text-[#737373] text-sm">
+                      Top strengths:
+                    </span>
+                    {onboardingData.careerStrengths.map((strength) => (
+                      <span
+                        key={strength}
+                        className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium"
+                      >
+                        {strength}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
               {onboardingData.careerValues.length > 0 && (
                 <div
@@ -730,6 +785,63 @@ function App() {
               )}
               <div className="flex justify-between">
                 <Button variant="secondary" onClick={() => setPhase("finalWord")}>
+                  Back
+                </Button>
+                <Button
+                  onClick={() => setPhase("finalReflection")}
+                  disabled={finalParagraph.length < MIN_FINAL_PARAGRAPH_CHARS}
+                >
+                  Continue
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {phase === "finalReflection" && (
+            <div className="space-y-8">
+              <div className="text-center">
+                <h2 className="font-serif text-3xl md:text-4xl text-[#262626] mb-3">
+                  Reflect on Your Growth
+                </h2>
+                <p className="text-[#525252] max-w-2xl mx-auto">
+                  Compare your original story with the version you crafted
+                  today. Notice how your values, skills, and strengths shaped
+                  the way you describe yourself.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white border border-[#E5E5E5] rounded-md p-6">
+                  <h3 className="font-serif text-xl text-[#262626] mb-3">
+                    Original Paragraph
+                  </h3>
+                  <p className="text-[#525252] leading-relaxed">
+                    {onboardingData.paragraph}
+                  </p>
+                </div>
+                <div className="bg-white border border-[#E5E5E5] rounded-md p-6">
+                  <h3 className="font-serif text-xl text-[#262626] mb-3">
+                    Rewritten Paragraph
+                  </h3>
+                  <p className="text-[#525252] leading-relaxed">
+                    {finalParagraph}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white border border-[#E5E5E5] rounded-md p-6 text-center">
+                <h4 className="font-serif text-lg text-[#262626] mb-2">
+                  Reflection Prompt
+                </h4>
+                <p className="text-[#525252]">
+                  What feels more authentic in your rewritten paragraph, and
+                  what new possibilities do you see in how you present your
+                  story?
+                </p>
+              </div>
+
+              <div className="flex justify-between">
+                <Button variant="secondary" onClick={() => setPhase("summary")}>
                   Back
                 </Button>
                 <div />
