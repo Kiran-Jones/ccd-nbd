@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BulletPoint } from "./types/BulletPoint";
 import { Bin } from "./types/Bin";
 import { AnalysisResult, Distribution } from "./types/Analytics";
@@ -17,7 +17,9 @@ import SentenceStep from "./components/onboarding/SentenceStep";
 import WordStep from "./components/onboarding/WordStep";
 import CareerValueStep from "./components/onboarding/CareerValueStep";
 import WelcomeStep from "./components/onboarding/WelcomeStep";
+import StaticTextReviewStep from "./components/onboarding/StaticTextReviewStep";
 import FinalWordStep from "./components/final-word/FinalWordStep";
+import { countWords, formatWordLabel } from "./utils/wordCount";
 import {
   exportJSON,
   exportPDF,
@@ -37,8 +39,11 @@ type NarrativeState =
 type AppPhase =
   | "welcome"
   | "paragraph"
+  | "paragraphReview"
   | "sentence"
+  | "sentenceReview"
   | "word"
+  | "wordReview"
   | "careerValue"
   | "upload"
   | "preview"
@@ -46,6 +51,34 @@ type AppPhase =
   | "finalWord"
   | "summary"
   | "finalReflection";
+
+const CELEBRATION_CONFETTI = [
+  { left: 2, color: "#00693E", delay: 0.0, duration: 2.6, size: 8 },
+  { left: 6, color: "#267ABA", delay: 0.2, duration: 2.9, size: 7 },
+  { left: 10, color: "#643C20", delay: 0.15, duration: 2.7, size: 9 },
+  { left: 14, color: "#8A6996", delay: 0.3, duration: 3.0, size: 8 },
+  { left: 18, color: "#FFA00F", delay: 0.1, duration: 2.8, size: 7 },
+  { left: 22, color: "#00693E", delay: 0.25, duration: 2.5, size: 9 },
+  { left: 26, color: "#267ABA", delay: 0.05, duration: 2.9, size: 8 },
+  { left: 30, color: "#643C20", delay: 0.35, duration: 2.7, size: 7 },
+  { left: 34, color: "#8A6996", delay: 0.15, duration: 2.8, size: 8 },
+  { left: 38, color: "#FFA00F", delay: 0.4, duration: 3.0, size: 9 },
+  { left: 42, color: "#00693E", delay: 0.2, duration: 2.6, size: 8 },
+  { left: 46, color: "#267ABA", delay: 0.45, duration: 2.8, size: 7 },
+  { left: 50, color: "#643C20", delay: 0.1, duration: 2.9, size: 8 },
+  { left: 54, color: "#8A6996", delay: 0.35, duration: 2.6, size: 9 },
+  { left: 58, color: "#FFA00F", delay: 0.05, duration: 2.7, size: 8 },
+  { left: 62, color: "#00693E", delay: 0.25, duration: 2.9, size: 7 },
+  { left: 66, color: "#267ABA", delay: 0.15, duration: 2.5, size: 9 },
+  { left: 70, color: "#643C20", delay: 0.3, duration: 2.8, size: 8 },
+  { left: 74, color: "#8A6996", delay: 0.2, duration: 2.7, size: 7 },
+  { left: 78, color: "#FFA00F", delay: 0.4, duration: 2.9, size: 8 },
+  { left: 82, color: "#00693E", delay: 0.1, duration: 2.6, size: 9 },
+  { left: 86, color: "#267ABA", delay: 0.35, duration: 2.8, size: 8 },
+  { left: 90, color: "#643C20", delay: 0.15, duration: 2.9, size: 7 },
+  { left: 94, color: "#8A6996", delay: 0.3, duration: 2.7, size: 8 },
+  { left: 98, color: "#FFA00F", delay: 0.2, duration: 2.8, size: 9 },
+];
 
 function App() {
   const [phase, setPhase] = useState<AppPhase>("welcome");
@@ -80,15 +113,19 @@ function App() {
     | { status: "success"; word: string }
     | { status: "error" }
   >({ status: "idle" });
+  const [showCelebrationBurst, setShowCelebrationBurst] = useState(false);
   const hasWokenBackend = useRef(false);
-  const MIN_FINAL_PARAGRAPH_CHARS = 50;
-  const MAX_FINAL_PARAGRAPH_CHARS = 1200;
+  const MIN_FINAL_PARAGRAPH_WORDS = 40;
+  const MAX_FINAL_PARAGRAPH_WORDS = 180;
 
   const isOnboardingPhase = [
     "welcome",
     "paragraph",
+    "paragraphReview",
     "sentence",
+    "sentenceReview",
     "word",
+    "wordReview",
     "careerValue",
   ].includes(phase);
 
@@ -104,8 +141,11 @@ function App() {
     const phaseOrder: AppPhase[] = [
       "welcome",
       "paragraph",
+      "paragraphReview",
       "sentence",
+      "sentenceReview",
       "word",
+      "wordReview",
       "careerValue",
       "upload",
     ];
@@ -128,8 +168,11 @@ function App() {
     const phaseOrder: AppPhase[] = [
       "welcome",
       "paragraph",
+      "paragraphReview",
       "sentence",
+      "sentenceReview",
       "word",
+      "wordReview",
       "careerValue",
     ];
     const currentIndex = phaseOrder.indexOf(phase);
@@ -364,19 +407,100 @@ function App() {
     setFinalParagraph("");
   };
 
-  // Step indicator for visual progress
-  const steps = [
-    { id: "upload", label: "Upload" },
-    { id: "preview", label: "Review" },
+  const milestones = [
+    { id: "intake", label: "Intake" },
+    { id: "resume", label: "Resume" },
     { id: "categorize", label: "Categorize" },
-    { id: "finalWord", label: "Finalize Word" },
-    { id: "summary", label: "Rewrite" },
-    { id: "finalReflection", label: "Reflect" },
-  ];
-  const currentStepIndex = steps.findIndex((s) => s.id === phase);
+    { id: "rewrite", label: "Rewrite" },
+    { id: "reflect", label: "Reflect" },
+  ] as const;
+  const milestoneByPhase: Record<AppPhase, (typeof milestones)[number]["id"]> = {
+    welcome: "intake",
+    paragraph: "intake",
+    paragraphReview: "intake",
+    sentence: "intake",
+    sentenceReview: "intake",
+    word: "intake",
+    wordReview: "intake",
+    careerValue: "intake",
+    upload: "resume",
+    preview: "resume",
+    categorize: "categorize",
+    finalWord: "rewrite",
+    summary: "rewrite",
+    finalReflection: "reflect",
+  };
+  const substepByPhase: Record<
+    AppPhase,
+    { step: number; total: number; milestoneLabel: string }
+  > = {
+    welcome: { step: 1, total: 8, milestoneLabel: "Intake" },
+    paragraph: { step: 2, total: 8, milestoneLabel: "Intake" },
+    paragraphReview: { step: 3, total: 8, milestoneLabel: "Intake" },
+    sentence: { step: 4, total: 8, milestoneLabel: "Intake" },
+    sentenceReview: { step: 5, total: 8, milestoneLabel: "Intake" },
+    word: { step: 6, total: 8, milestoneLabel: "Intake" },
+    wordReview: { step: 7, total: 8, milestoneLabel: "Intake" },
+    careerValue: { step: 8, total: 8, milestoneLabel: "Intake" },
+    upload: { step: 1, total: 2, milestoneLabel: "Resume" },
+    preview: { step: 2, total: 2, milestoneLabel: "Resume" },
+    categorize: { step: 1, total: 1, milestoneLabel: "Categorize" },
+    finalWord: { step: 1, total: 2, milestoneLabel: "Rewrite" },
+    summary: { step: 2, total: 2, milestoneLabel: "Rewrite" },
+    finalReflection: { step: 1, total: 1, milestoneLabel: "Reflect" },
+  };
+  const currentMilestoneId = milestoneByPhase[phase];
+  const currentMilestoneIndex = milestones.findIndex(
+    (milestone) => milestone.id === currentMilestoneId,
+  );
+  const currentSubstep = substepByPhase[phase];
+  const substepText = `Step ${currentSubstep.step} of ${currentSubstep.total} in ${currentSubstep.milestoneLabel}`;
+  const finalParagraphWordCount = countWords(finalParagraph);
+  const selectedWord = onboardingData.finalWord || onboardingData.word;
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+    });
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "finalReflection") {
+      return;
+    }
+    setShowCelebrationBurst(true);
+    const timeoutId = window.setTimeout(() => {
+      setShowCelebrationBurst(false);
+    }, 3400);
+    return () => window.clearTimeout(timeoutId);
+  }, [phase]);
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] flex flex-col">
+      {phase === "finalReflection" && showCelebrationBurst && (
+        <div className="screen-celebration" aria-hidden="true">
+          {CELEBRATION_CONFETTI.map((piece, index) => (
+            <span
+              key={`${index}-${piece.left}`}
+              className="screen-confetti-piece"
+              style={{
+                left: `${piece.left}%`,
+                backgroundColor: piece.color,
+                width: `${piece.size}px`,
+                height: `${Math.max(4, Math.round(piece.size * 0.4))}px`,
+                animationDelay: `${piece.delay}s`,
+                animationDuration: `${piece.duration}s`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-[#00693E] text-white">
         <div className="max-w-6xl mx-auto px-6 py-4">
@@ -398,12 +522,9 @@ function App() {
                 onClick={handleReset}
                 className="hidden sm:block text-left hover:opacity-80 transition-opacity"
               >
-                <h1 className="font-serif text-xl md:text-2xl">
+                <h1 className="font-serif text-lg md:text-xl">
                   Narrative by Design Workshop
                 </h1>
-                <p className="text-white/80 text-xs mt-0.5">
-                  Discover how to tell your story
-                </p>
               </button>
             </div>
             {!isOnboardingPhase && phase !== "upload" && (
@@ -418,49 +539,42 @@ function App() {
           </div>
         </div>
 
-        {/* Progress Steps - only show during main flow, not onboarding */}
-        {!isOnboardingPhase && (
-          <div className="bg-[#003D1C]">
-            <div className="max-w-6xl mx-auto px-6 py-3">
-              <div className="flex items-center justify-center gap-2 md:gap-4">
-                {steps.map((step, index) => (
-                  <div key={step.id} className="flex items-center">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`
-                          w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium
-                          ${
-                            index <= currentStepIndex
-                              ? "bg-white text-[#00693E]"
-                              : "bg-white/20 text-white/60"
-                          }
-                        `}
-                      >
-                        {index + 1}
-                      </div>
-                      <span
-                        className={`
-                          text-sm hidden sm:inline
-                          ${index <= currentStepIndex ? "text-white" : "text-white/60"}
-                        `}
-                      >
-                        {step.label}
-                      </span>
-                    </div>
-                    {index < steps.length - 1 && (
-                      <div
-                        className={`
-                          w-8 md:w-16 h-px mx-2
-                          ${index < currentStepIndex ? "bg-white" : "bg-white/20"}
-                        `}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
+        <div className="bg-[#003D1C]">
+          <div className="max-w-6xl mx-auto px-6 py-3">
+            <div className="flex items-center justify-center gap-2 md:gap-3">
+              {milestones.map((milestone, index) => (
+                <div key={milestone.id} className="flex items-center">
+                  <span
+                    className={`
+                      text-xs md:text-sm px-3 py-1 rounded-full border font-medium
+                      ${
+                        index < currentMilestoneIndex
+                          ? "bg-white text-[#00693E] border-white"
+                          : index === currentMilestoneIndex
+                            ? "bg-white/15 text-white border-white/60"
+                            : "bg-transparent text-white/60 border-white/30"
+                      }
+                    `}
+                  >
+                    {milestone.label}
+                  </span>
+                  {index < milestones.length - 1 && (
+                    <div
+                      className={`
+                        w-4 md:w-8 h-px mx-1 md:mx-2
+                        ${
+                          index < currentMilestoneIndex
+                            ? "bg-white/90"
+                            : "bg-white/30"
+                        }
+                      `}
+                    />
+                  )}
+                </div>
+              ))}
             </div>
           </div>
-        )}
+        </div>
       </header>
 
       {/* Main Content */}
@@ -476,6 +590,12 @@ function App() {
                 : "max-w-6xl"
           }`}
         >
+          <div className="text-center mb-6">
+            <p className="inline-flex items-center px-3 py-1 rounded-full border border-[#E5E5E5] bg-white text-[#525252] text-sm">
+              {substepText}
+            </p>
+          </div>
+
           {/* Phase Title */}
           {phase === "upload" && (
             <div className="text-center mb-12">
@@ -540,9 +660,23 @@ function App() {
             />
           )}
 
+          {phase === "paragraphReview" && (
+            <StaticTextReviewStep
+              title="Start With Your Real Intro"
+              subtitle="Review your response before moving to the next step."
+              label="Your spoken-style introduction"
+              value={onboardingData.paragraph}
+              onContinue={() => setPhase("sentence")}
+              onBack={() => setPhase("paragraph")}
+              stepNumber={2}
+              totalSteps={7}
+            />
+          )}
+
           {phase === "sentence" && (
             <SentenceStep
               value={onboardingData.sentence}
+              paragraphContext={onboardingData.paragraph}
               onComplete={(value) =>
                 handleOnboardingStepComplete("sentence", value)
               }
@@ -550,13 +684,40 @@ function App() {
             />
           )}
 
+          {phase === "sentenceReview" && (
+            <StaticTextReviewStep
+              title="Boil It Down"
+              subtitle="Review your response before moving to the next step."
+              label="One clear sentence"
+              value={onboardingData.sentence}
+              onContinue={() => setPhase("word")}
+              onBack={() => setPhase("sentence")}
+              stepNumber={4}
+              totalSteps={7}
+            />
+          )}
+
           {phase === "word" && (
             <WordStep
               value={onboardingData.word}
+              sentenceContext={onboardingData.sentence}
               onComplete={(value) =>
                 handleOnboardingStepComplete("word", value)
               }
               onBack={handleOnboardingBack}
+            />
+          )}
+
+          {phase === "wordReview" && (
+            <StaticTextReviewStep
+              title="Name The Thread"
+              subtitle="Review your response before moving to the next step."
+              label="Your central word"
+              value={onboardingData.word}
+              onContinue={() => setPhase("careerValue")}
+              onBack={() => setPhase("word")}
+              stepNumber={6}
+              totalSteps={7}
             />
           )}
 
@@ -696,7 +857,9 @@ function App() {
                     id="final-paragraph"
                     value={finalParagraph}
                     onChange={(event) => {
-                      if (event.target.value.length <= MAX_FINAL_PARAGRAPH_CHARS) {
+                      if (
+                        countWords(event.target.value) <= MAX_FINAL_PARAGRAPH_WORDS
+                      ) {
                         setFinalParagraph(event.target.value);
                       }
                     }}
@@ -710,8 +873,8 @@ function App() {
                       transition-colors duration-200
                       resize-none
                       ${
-                        finalParagraph.length > 0 &&
-                        finalParagraph.length < MIN_FINAL_PARAGRAPH_CHARS
+                        finalParagraphWordCount > 0 &&
+                        finalParagraphWordCount < MIN_FINAL_PARAGRAPH_WORDS
                           ? "border-[#9D162E] focus:border-[#9D162E]"
                           : "border-[#D4D4D4] focus:border-[#00693E]"
                       }
@@ -720,24 +883,25 @@ function App() {
                   <div className="flex justify-between mt-2">
                     <span
                       className={`text-sm ${
-                        finalParagraph.length > 0 &&
-                        finalParagraph.length < MIN_FINAL_PARAGRAPH_CHARS
+                        finalParagraphWordCount > 0 &&
+                        finalParagraphWordCount < MIN_FINAL_PARAGRAPH_WORDS
                           ? "text-[#9D162E]"
                           : "text-[#525252]"
                       }`}
                     >
-                      {finalParagraph.length < MIN_FINAL_PARAGRAPH_CHARS
-                        ? `${MIN_FINAL_PARAGRAPH_CHARS - finalParagraph.length} more characters needed`
+                      {finalParagraphWordCount < MIN_FINAL_PARAGRAPH_WORDS
+                        ? `${MIN_FINAL_PARAGRAPH_WORDS - finalParagraphWordCount} more words needed`
                         : "Looking good!"}
                     </span>
                     <span
                       className={`text-sm ${
-                        finalParagraph.length > MAX_FINAL_PARAGRAPH_CHARS * 0.9
+                        finalParagraphWordCount > MAX_FINAL_PARAGRAPH_WORDS * 0.9
                           ? "text-[#9D162E]"
                           : "text-[#525252]"
                       }`}
                     >
-                      {finalParagraph.length}/{MAX_FINAL_PARAGRAPH_CHARS}
+                      {formatWordLabel(finalParagraphWordCount)}/
+                      {MAX_FINAL_PARAGRAPH_WORDS}
                     </span>
                   </div>
                 </div>
@@ -789,7 +953,7 @@ function App() {
                 </Button>
                 <Button
                   onClick={() => setPhase("finalReflection")}
-                  disabled={finalParagraph.length < MIN_FINAL_PARAGRAPH_CHARS}
+                  disabled={finalParagraphWordCount < MIN_FINAL_PARAGRAPH_WORDS}
                 >
                   Continue
                 </Button>
@@ -808,6 +972,57 @@ function App() {
                   today. Notice how your values, skills, and strengths shaped
                   the way you describe yourself.
                 </p>
+              </div>
+
+              <div className="bg-white border border-[#E5E5E5] rounded-md p-6">
+                <h3 className="font-serif text-xl text-[#262626] mb-4">
+                  Your Story Core
+                </h3>
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <span className="text-[#737373] text-sm">Defining word:</span>
+                  <span className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium">
+                    {selectedWord}
+                  </span>
+                </div>
+                {onboardingData.careerValues.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <span className="text-[#737373] text-sm">Top values:</span>
+                    {onboardingData.careerValues.map((value) => (
+                      <span
+                        key={value}
+                        className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium"
+                      >
+                        {value}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {onboardingData.careerSkills.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <span className="text-[#737373] text-sm">Top skills:</span>
+                    {onboardingData.careerSkills.map((skill) => (
+                      <span
+                        key={skill}
+                        className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {onboardingData.careerStrengths.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                    <span className="text-[#737373] text-sm">Top strengths:</span>
+                    {onboardingData.careerStrengths.map((strength) => (
+                      <span
+                        key={strength}
+                        className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium"
+                      >
+                        {strength}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

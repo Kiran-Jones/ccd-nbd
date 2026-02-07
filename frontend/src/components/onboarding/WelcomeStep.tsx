@@ -9,21 +9,21 @@ export default function WelcomeStep({ onContinue }: Props) {
     <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="font-serif text-3xl md:text-4xl text-[#262626] mb-3">
-          Narrative by Design
+          Welcome to Narrative by Design
         </h2>
         <p className="text-[#525252] text-lg">
-          A guided workshop to help you craft a clear, confident career story.
+          Take a few minutes to explore your story and how you want to share it.
         </p>
       </div>
 
       <div className="bg-white border border-[#E5E5E5] rounded-md p-8 mb-6 space-y-4 text-[#525252] leading-relaxed">
         <p>
-          You will reflect on your identity, organize your experiences, and
-          identify the values that anchor your story.
+          This workshop will guide you through a few short reflection steps, then
+          help you connect your experiences to the values that matter most to you.
         </p>
         <p>
-          By the end, you will write an interview-ready response to "Tell me
-          about yourself" in your own voice.
+          By the end, you will have a stronger, more personal response to
+          "Tell me about yourself" that still sounds like you.
         </p>
       </div>
 

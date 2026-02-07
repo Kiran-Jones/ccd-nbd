@@ -102,19 +102,18 @@ export default function BinContainer({
   const categorizedCount = bins.reduce((sum, bin) => sum + bin.bullets.length, 0);
   const canComplete = categorizedCount > 0;
 
-  // Get bins by position: interests (top-left), skillset (top-right), values (bottom-left), strengths (bottom-right)
-  const getBinByPosition = (position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right') => {
-    const binIds = {
-      'top-left': 'interests',
-      'top-right': 'skillset',
-      'bottom-left': 'values',
-      'bottom-right': 'strengths',
-    };
-    const binId = binIds[position];
-    const bin = bins.find((b) => b.id === binId)!;
-    const config = BINS.find((c) => c.id === binId)!;
+  const getBinWithConfig = (binId: 'skillset' | 'values' | 'strengths') => {
+    const bin = bins.find((entry) => entry.id === binId);
+    const config = BINS.find((entry) => entry.id === binId);
+    if (!bin || !config) {
+      return null;
+    }
     return { bin, config };
   };
+
+  const skillsetBin = getBinWithConfig('skillset');
+  const valuesBin = getBinWithConfig('values');
+  const strengthsBin = getBinWithConfig('strengths');
 
   return (
     <DndContext
@@ -122,79 +121,53 @@ export default function BinContainer({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      {/* Diamond Layout Container */}
+      {/* Row layout: all bins aligned on one horizontal level */}
       <div className="relative">
-        {/* Grid layout for corners and center */}
         <div className="mx-auto max-w-6xl">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-x-4 lg:gap-x-6 items-start">
-          {/* Top Row */}
-          <div className="w-full max-w-[320px] justify-self-center relative z-10">
-            {/* Top-left: Interests */}
-            {(() => {
-              const { bin, config } = getBinByPosition('top-left');
-              return (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 items-start">
+            <div className="w-full max-w-[320px] justify-self-center relative z-10">
+              {skillsetBin && (
                 <DroppableBin
-                  bin={bin}
-                  config={config}
-                  onRemoveBullet={(bulletId) => handleRemoveBullet(bin.id, bulletId)}
+                  bin={skillsetBin.bin}
+                  config={skillsetBin.config}
+                  onRemoveBullet={(bulletId) =>
+                    handleRemoveBullet(skillsetBin.bin.id, bulletId)
+                  }
                 />
-              );
-            })()}
-          </div>
-          <div>{/* Empty center top */}</div>
-          <div className="w-full max-w-[320px] justify-self-center relative z-10">
-            {/* Top-right: Skill Set */}
-            {(() => {
-              const { bin, config } = getBinByPosition('top-right');
-              return (
+              )}
+            </div>
+            <div className="w-full max-w-[320px] justify-self-center relative z-10">
+              {valuesBin && (
                 <DroppableBin
-                  bin={bin}
-                  config={config}
-                  onRemoveBullet={(bulletId) => handleRemoveBullet(bin.id, bulletId)}
+                  bin={valuesBin.bin}
+                  config={valuesBin.config}
+                  onRemoveBullet={(bulletId) =>
+                    handleRemoveBullet(valuesBin.bin.id, bulletId)
+                  }
                 />
-              );
-            })()}
+              )}
+            </div>
+            <div className="w-full max-w-[320px] justify-self-center relative z-10">
+              {strengthsBin && (
+                <DroppableBin
+                  bin={strengthsBin.bin}
+                  config={strengthsBin.config}
+                  onRemoveBullet={(bulletId) =>
+                    handleRemoveBullet(strengthsBin.bin.id, bulletId)
+                  }
+                />
+              )}
+            </div>
           </div>
 
-          {/* Middle Row - Center Stack */}
-          <div>{/* Empty left */}</div>
-          <div className="justify-self-center w-full max-w-md -my-[40px] md:-my-[50px] relative z-20">
-            <BulletPool
-              bullets={uncategorized}
-              onDuplicate={handleDuplicate}
-              onDeleteDuplicate={handleDeleteDuplicate}
-            />
-          </div>
-          <div>{/* Empty right */}</div>
-
-          {/* Bottom Row */}
-          <div className="w-full max-w-[320px] justify-self-center relative z-10">
-            {/* Bottom-left: Values */}
-            {(() => {
-              const { bin, config } = getBinByPosition('bottom-left');
-              return (
-                <DroppableBin
-                  bin={bin}
-                  config={config}
-                  onRemoveBullet={(bulletId) => handleRemoveBullet(bin.id, bulletId)}
-                />
-              );
-            })()}
-          </div>
-          <div>{/* Empty center bottom */}</div>
-          <div className="w-full max-w-[320px] justify-self-center relative z-10">
-            {/* Bottom-right: Strengths */}
-            {(() => {
-              const { bin, config } = getBinByPosition('bottom-right');
-              return (
-                <DroppableBin
-                  bin={bin}
-                  config={config}
-                  onRemoveBullet={(bulletId) => handleRemoveBullet(bin.id, bulletId)}
-                />
-              );
-            })()}
-          </div>
+          <div className="mt-6 lg:mt-8 flex justify-center">
+            <div className="w-full max-w-md relative z-20">
+              <BulletPool
+                bullets={uncategorized}
+                onDuplicate={handleDuplicate}
+                onDeleteDuplicate={handleDeleteDuplicate}
+              />
+            </div>
           </div>
         </div>
       </div>

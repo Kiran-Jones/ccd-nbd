@@ -8,12 +8,6 @@ export interface BinConfig {
 // Using Dartmouth tertiary colors - should always appear alongside Dartmouth Green
 export const BINS: BinConfig[] = [
   {
-    id: 'interests',
-    label: 'Interests',
-    color: '#267ABA', // River Blue
-    description: 'What excites and motivates you',
-  },
-  {
     id: 'skillset',
     label: 'Skill Set',
     color: '#00693E', // Dartmouth Green (primary for emphasis)

@@ -46,8 +46,8 @@ export default function CareerValueStep({
       }
       onBack={onBack}
       canContinue={isValid}
-      stepNumber={4}
-      totalSteps={5}
+      stepNumber={7}
+      totalSteps={7}
     >
       <div className="space-y-8">
         <div>

@@ -88,19 +88,23 @@ You must:
 3. For experiences that don't strongly align, suggest how to REFRAME the narrative (not rewrite the resume bullet, but how to TALK about it)
 4. Connect patterns to their career value and how the word reinforces that value
 5. Make the paragraph and bullets clearly distinct across different career values, even when the word stays the same
-6. Provide an interview-style paragraph response that sounds natural when spoken aloud
+6. Provide an interview-style paragraph response that sounds natural when spoken aloud and follows a clear spoken flow
 7. Write directly to the student using second person ("you"), avoiding phrases like "this student"
+8. In the interview paragraph, support key claims with high-level experience themes from the resume (e.g., research, platform building, team collaboration, leadership, client impact), not line-by-line bullet recitation
 
 CRITICAL CONSTRAINTS:
 - Do NOT suggest resume rewrites or edits to the bullet text itself
 - Focus on how to VERBALLY frame and discuss experiences in interviews/networking
 - Provide specific, actionable reframing language
 - Reference actual experiences by name/content
+- For interviewParagraph, DO NOT include exact numbers, percentages, dollar amounts, date ranges, or tool-heavy resume details unless absolutely necessary
+- For interviewParagraph, DO NOT quote or closely paraphrase a single resume bullet
+- For interviewParagraph, keep the tone conversational and spoken, as an interview opener
 
 Respond with valid JSON in this exact format:
 {
   "paragraph": "2-3 sentences analyzing how their career value connects to their experience patterns, with the word as a supporting theme",
-  "interviewParagraph": "A single-paragraph answer to 'Tell me about yourself / walk me through your resume' that is 50-1200 characters",
+  "interviewParagraph": "A single paragraph of about 4-5 sentences and 60-140 words that answers 'Tell me about yourself / walk me through your resume' using high-level experiences as evidence, in natural spoken language",
   "bullets": ["3-4 high-level storytelling strategies grounded in their career value and reinforced by their word"],
   "experienceSuggestions": [
     {
@@ -144,7 +148,9 @@ TOP CATEGORY: {analysis.analytics.top_category}
 DETAILED EXPERIENCES BY CATEGORY:
 {experiences_detailed}
 
-Analyze these specific experiences through the lens of "{career_value}" first, and "{word}" second. Use the student's top skills and strengths as supporting context. Provide reframing suggestions for experiences that don't naturally align with "{career_value}", while still connecting back to "{word}" as a supporting theme. Ensure the summary meaningfully changes when the career value changes."""
+Analyze these specific experiences through the lens of "{career_value}" first, and "{word}" second. Use the student's top skills and strengths as supporting context. Provide reframing suggestions for experiences that don't naturally align with "{career_value}", while still connecting back to "{word}" as a supporting theme. Ensure the summary meaningfully changes when the career value changes.
+
+For "interviewParagraph", target about 4-5 sentences and 60-140 words. Use a claim-then-evidence pattern, but keep evidence high-level and interview-natural. Mention broad experience areas from the resume, not exact bullet text and not hard metrics."""
 
         logger.info(
             f"Generating narrative for word: {word}, value: {career_value}"

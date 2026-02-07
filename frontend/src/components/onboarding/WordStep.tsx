@@ -1,61 +1,77 @@
 import { useState } from 'react';
 import OnboardingStep from './OnboardingStep';
+import { countWords, formatWordLabel } from '../../utils/wordCount';
 
 interface Props {
   value: string;
+  sentenceContext: string;
   onComplete: (value: string) => void;
   onBack: () => void;
 }
 
-const MIN_CHARS = 2;
-const MAX_CHARS = 30;
+const REQUIRED_WORDS = 1;
 
-export default function WordStep({ value, onComplete, onBack }: Props) {
+export default function WordStep({
+  value,
+  sentenceContext,
+  onComplete,
+  onBack,
+}: Props) {
   const [text, setText] = useState(value);
 
-  const charCount = text.length;
+  const wordCount = countWords(text);
   const isLettersOnly = /^[a-zA-Z]+$/.test(text);
-  const isValid = charCount >= MIN_CHARS && charCount <= MAX_CHARS && isLettersOnly;
+  const isValid = wordCount === REQUIRED_WORDS && isLettersOnly;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    if (newValue.length <= MAX_CHARS) {
-      setText(newValue);
-    }
+    setText(e.target.value);
   };
 
   const getErrorMessage = () => {
-    if (charCount === 0) return '';
-    if (!isLettersOnly && charCount > 0) return 'Letters only, please';
-    if (charCount < MIN_CHARS) return `${MIN_CHARS - charCount} more characters needed`;
+    if (text.length === 0) return '';
+    if (wordCount !== REQUIRED_WORDS) return 'Please enter exactly one word';
+    if (!isLettersOnly) return 'Letters only, please';
     return 'Perfect!';
   };
 
-  const hasError = charCount > 0 && (!isLettersOnly || charCount < MIN_CHARS);
+  const hasError = text.length > 0 && (!isLettersOnly || wordCount !== REQUIRED_WORDS);
 
   return (
     <OnboardingStep
-      title="One Word"
-      subtitle="If you could describe yourself in a single word, what would it be?"
+      title="Name The Thread"
+      subtitle="Choose one meaningful word that captures the motivation running through your sentence."
       onContinue={() => onComplete(text)}
       onBack={onBack}
       canContinue={isValid}
-      stepNumber={3}
-      totalSteps={5}
+      stepNumber={5}
+      totalSteps={7}
     >
       <div>
+        {sentenceContext.trim().length > 0 && (
+          <div className="mb-6 p-4 rounded border border-[#E5E5E5] bg-[#F5F5F5]">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#525252] mb-2">
+              Your submitted sentence
+            </p>
+            <p className="text-sm text-[#404040] leading-relaxed whitespace-pre-wrap">
+              {sentenceContext}
+            </p>
+          </div>
+        )}
         <label
           htmlFor="word-input"
           className="block text-sm font-semibold text-[#404040] mb-2"
         >
-          Your defining word
+          Your central word
         </label>
+        <p className="text-sm text-[#525252] mb-2">
+          Pick a motivating word, not a job title or broad trait.
+        </p>
         <input
           id="word-input"
           type="text"
           value={text}
           onChange={handleChange}
-          placeholder="Creative"
+          placeholder="Curiosity"
           className={`
             w-full px-4 py-3 rounded
             border text-base font-sans
@@ -70,7 +86,7 @@ export default function WordStep({ value, onComplete, onBack }: Props) {
             {getErrorMessage()}
           </span>
           <span className="text-sm text-[#525252]">
-            {charCount}/{MAX_CHARS}
+            {formatWordLabel(wordCount)}/{REQUIRED_WORDS}
           </span>
         </div>
       </div>
