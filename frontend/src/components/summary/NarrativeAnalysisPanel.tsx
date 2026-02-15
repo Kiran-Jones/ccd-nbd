@@ -48,7 +48,7 @@ function ExperienceCard({
   const config = alignmentConfig[suggestion.alignment];
 
   return (
-    <div className={`border ${config.borderColor} rounded-md p-4 ${config.bgColor}`}>
+    <div className={`border border-black/10 rounded-xl p-4 ${config.bgColor}`}>
       <div className="flex items-start justify-between gap-4 mb-3">
         <span className={`text-xs font-medium px-2 py-1 rounded ${config.bgColor} ${config.textColor}`}>
           {config.label}
@@ -65,7 +65,7 @@ function ExperienceCard({
       </p>
 
       {suggestion.reframe && (
-        <div className="bg-white/80 rounded p-3 border border-[#E5E5E5]">
+        <div className="bg-white/60 rounded-xl p-3 border border-black/10">
           <p className="text-xs text-[#737373] uppercase tracking-wide mb-1">
             How to frame around "{word}"
           </p>
@@ -82,23 +82,23 @@ function LoadingSkeleton() {
   return (
     <div className="animate-pulse">
       <div className="space-y-3 mb-6">
-        <div className="h-4 bg-[#E5E5E5] rounded w-full"></div>
-        <div className="h-4 bg-[#E5E5E5] rounded w-11/12"></div>
-        <div className="h-4 bg-[#E5E5E5] rounded w-4/5"></div>
+        <div className="h-4 bg-black/10 rounded w-full"></div>
+        <div className="h-4 bg-black/10 rounded w-11/12"></div>
+        <div className="h-4 bg-black/10 rounded w-4/5"></div>
       </div>
-      <div className="border-t border-[#E5E5E5] pt-6">
-        <div className="h-4 bg-[#E5E5E5] rounded w-48 mb-4"></div>
+      <div className="border-t border-black/10 pt-6">
+        <div className="h-4 bg-black/10 rounded w-48 mb-4"></div>
         <div className="space-y-3">
-          <div className="h-4 bg-[#E5E5E5] rounded w-full"></div>
-          <div className="h-4 bg-[#E5E5E5] rounded w-10/12"></div>
-          <div className="h-4 bg-[#E5E5E5] rounded w-9/12"></div>
+          <div className="h-4 bg-black/10 rounded w-full"></div>
+          <div className="h-4 bg-black/10 rounded w-10/12"></div>
+          <div className="h-4 bg-black/10 rounded w-9/12"></div>
         </div>
       </div>
-      <div className="border-t border-[#E5E5E5] mt-6 pt-6">
-        <div className="h-4 bg-[#E5E5E5] rounded w-56 mb-4"></div>
+      <div className="border-t border-black/10 mt-6 pt-6">
+        <div className="h-4 bg-black/10 rounded w-56 mb-4"></div>
         <div className="space-y-4">
-          <div className="h-32 bg-[#E5E5E5] rounded"></div>
-          <div className="h-32 bg-[#E5E5E5] rounded"></div>
+          <div className="h-32 bg-black/10 rounded"></div>
+          <div className="h-32 bg-black/10 rounded"></div>
         </div>
       </div>
     </div>
@@ -117,10 +117,10 @@ export default function NarrativeAnalysisPanel({
       ? narrativeState.data.interviewParagraph || narrativeState.data.paragraph
       : "";
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-md">
+    <div className="bg-white/80 rounded-xl">
       {/* Header */}
-      <div className="px-8 py-6 border-b border-[#E5E5E5]">
-        <h3 className="font-serif text-2xl text-[#262626]">
+      <div className="px-8 py-6 border-b border-black/10">
+        <h3 className="text-2xl font-medium text-[#262626]">
           Your Interview Answer
         </h3>
         <p className="text-[#525252] mt-2">
@@ -155,7 +155,7 @@ export default function NarrativeAnalysisPanel({
             <p className="text-[#525252] mb-4">{narrativeState.message}</p>
             <button
               onClick={onRetry}
-              className="px-4 py-2 bg-[#00693E] text-white rounded-md hover:bg-[#005432] transition-colors"
+              className="px-4 py-2 bg-[#366946] text-white rounded-xl hover:bg-[#2E5A3C] transition-colors"
             >
               Try Again
             </button>
@@ -171,8 +171,8 @@ export default function NarrativeAnalysisPanel({
 
             {/* Bullets Section */}
             {showDetails && narrativeState.data.bullets.length > 0 && (
-              <div className="border-t border-[#E5E5E5] mt-6 pt-6">
-                <h4 className="font-serif text-lg text-[#262626] mb-4">
+              <div className="border-t border-black/10 mt-6 pt-6">
+                <h4 className="text-lg font-medium text-[#262626] mb-4">
                   How to tell your story:
                 </h4>
                 <ul className="space-y-3">
@@ -191,8 +191,8 @@ export default function NarrativeAnalysisPanel({
 
             {/* Experience-Specific Suggestions */}
             {showDetails && narrativeState.data.experienceSuggestions.length > 0 && (
-              <div className="border-t border-[#E5E5E5] mt-6 pt-6">
-                <h4 className="font-serif text-lg text-[#262626] mb-2">
+              <div className="border-t border-black/10 mt-6 pt-6">
+                <h4 className="text-lg font-medium text-[#262626] mb-2">
                   Experience-Specific Guidance
                 </h4>
                 <p className="text-[#737373] text-sm mb-4">

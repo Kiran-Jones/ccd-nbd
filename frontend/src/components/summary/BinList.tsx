@@ -25,10 +25,10 @@ export default function BinList({ bins }: Props) {
   };
 
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-md">
+    <div className="bg-white/80 rounded-xl">
       {/* Header */}
-      <div className="px-8 py-6 border-b border-[#E5E5E5]">
-        <h3 className="font-serif text-2xl text-[#262626]">
+      <div className="px-8 py-6 border-b border-black/10">
+        <h3 className="text-2xl font-medium text-[#262626]">
           Your Categorized Experiences
         </h3>
         <p className="text-[#525252] mt-2">
@@ -37,7 +37,7 @@ export default function BinList({ bins }: Props) {
       </div>
 
       {/* Categories */}
-      <div className="divide-y divide-[#E5E5E5]">
+      <div className="divide-y divide-black/10">
         {bins.map((bin) => {
           const config = BINS.find((c) => c.id === bin.id);
           const isExpanded = expandedBins.has(bin.id);
@@ -50,7 +50,7 @@ export default function BinList({ bins }: Props) {
                 onClick={() => hasItems && toggleBin(bin.id)}
                 className={`
                   w-full flex items-center gap-4 px-8 py-5 text-left transition-colors
-                  ${hasItems ? 'hover:bg-[#F5F5F5] cursor-pointer' : 'cursor-default'}
+                  ${hasItems ? 'hover:bg-white/60 cursor-pointer' : 'cursor-default'}
                 `}
                 disabled={!hasItems}
               >
@@ -61,7 +61,7 @@ export default function BinList({ bins }: Props) {
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
                     <h4
-                      className="font-serif text-lg"
+                      className="text-lg font-medium"
                       style={{ color: hasItems ? config?.color : '#A3A3A3' }}
                     >
                       {config?.label}

@@ -18,17 +18,17 @@ export default function BulletPool({ bullets, onDuplicate, onDeleteDuplicate }: 
   return (
     <div className="flex flex-col items-center">
       {/* Header */}
-      <h3 className="font-serif text-lg text-[#262626] mb-1 text-center">
+      <h3 className="text-lg font-medium text-white uppercase tracking-wider mb-1 text-center">
         Your Experiences
       </h3>
 
       {/* Stack container - extra padding for stack offset */}
       <div className="relative w-full max-w-sm pt-3 pl-3">
         {bullets.length === 0 ? (
-          <div className="text-center py-8 bg-white border border-[#E5E5E5] rounded-md">
-            <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-[#E8F5E9] flex items-center justify-center">
+          <div className="text-center py-8 bg-white/80 border border-black/10 rounded-xl">
+            <div className="w-10 h-10 mx-auto mb-3 rounded-full bg-white/60 flex items-center justify-center">
               <svg
-                className="w-5 h-5 text-[#00693E]"
+                className="w-5 h-5 text-[#003D1C]"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -41,8 +41,8 @@ export default function BulletPool({ bullets, onDuplicate, onDeleteDuplicate }: 
                 />
               </svg>
             </div>
-            <p className="text-[#404040] font-medium text-sm">All done!</p>
-            <p className="text-xs text-[#737373] mt-1">
+            <p className="text-[#262626] font-medium text-sm">All done!</p>
+            <p className="text-xs text-[#525252] mt-1">
               Every experience has been categorized.
             </p>
           </div>
@@ -51,7 +51,7 @@ export default function BulletPool({ bullets, onDuplicate, onDeleteDuplicate }: 
             {/* Stack effect layers (behind the top card) */}
             {totalBullets >= 3 && (
               <div
-                className="absolute top-0 left-0 right-0 h-[120px] bg-white border border-[#D4D4D4] rounded-md shadow-sm"
+                className="absolute top-0 left-0 right-0 h-[120px] bg-white/70 border border-black/10 rounded-xl shadow-sm"
                 style={{
                   transform: 'translate(-8px, -8px)',
                   zIndex: 0,
@@ -60,7 +60,7 @@ export default function BulletPool({ bullets, onDuplicate, onDeleteDuplicate }: 
             )}
             {totalBullets >= 2 && (
               <div
-                className="absolute top-0 left-0 right-0 h-[120px] bg-white border border-[#E5E5E5] rounded-md shadow-sm"
+                className="absolute top-0 left-0 right-0 h-[120px] bg-white/80 border border-black/10 rounded-xl shadow-sm"
                 style={{
                   transform: 'translate(-4px, -4px)',
                   zIndex: 1,
@@ -81,7 +81,7 @@ export default function BulletPool({ bullets, onDuplicate, onDeleteDuplicate }: 
 
             {/* Remaining count indicator */}
             {remainingCount > 0 && (
-              <p className="text-xs text-[#737373] text-center mt-3">
+              <p className="text-xs text-white/70 text-center mt-3">
                 {remainingCount} more {remainingCount === 1 ? 'experience' : 'experiences'} remaining
               </p>
             )}
@@ -91,7 +91,7 @@ export default function BulletPool({ bullets, onDuplicate, onDeleteDuplicate }: 
 
       {/* Instructions */}
       {bullets.length > 0 && (
-        <p className="text-xs text-[#737373] mt-3 leading-relaxed text-center max-w-sm">
+        <p className="text-xs text-white/60 mt-3 leading-relaxed text-center max-w-sm">
           Drag to a category corner. Use the copy button to place in multiple categories.
         </p>
       )}

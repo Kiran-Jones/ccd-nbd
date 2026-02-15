@@ -103,7 +103,7 @@ export default function ResumeViewer({ file }: Props) {
   // No file provided
   if (!file) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-[#737373] py-12">
+      <div className="flex flex-col items-center justify-center h-full text-[#525252] py-12">
         <FileText size={48} className="mb-4 opacity-50" />
         <p className="text-sm">No document to preview</p>
       </div>
@@ -116,7 +116,7 @@ export default function ResumeViewer({ file }: Props) {
       <div className="flex flex-col items-center justify-center h-full text-[#9D162E] py-12">
         <AlertCircle size={48} className="mb-4" />
         <p className="text-sm font-medium">{error}</p>
-        <p className="text-xs text-[#737373] mt-1">
+        <p className="text-xs text-[#525252] mt-1">
           You can still review the extracted text on the right
         </p>
       </div>
@@ -126,7 +126,7 @@ export default function ResumeViewer({ file }: Props) {
   // Loading state for DOCX
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-[#737373] py-12">
+      <div className="flex flex-col items-center justify-center h-full text-[#525252] py-12">
         <Loader2 size={48} className="mb-4 animate-spin" />
         <p className="text-sm">Loading document...</p>
       </div>
@@ -135,11 +135,11 @@ export default function ResumeViewer({ file }: Props) {
 
   // Zoom controls component
   const ZoomControls = () => (
-    <div className="sticky top-0 z-10 bg-[#F5F5F5] border-b border-[#E5E5E5] px-4 py-2 flex items-center justify-center gap-2">
+    <div className="sticky top-0 z-10 bg-white/60 border-b border-black/10 px-4 py-2 flex items-center justify-center gap-2">
       <button
         onClick={handleZoomOut}
         disabled={zoomIndex === 0}
-        className="p-1.5 rounded hover:bg-[#E5E5E5] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="p-1.5 rounded hover:bg-black/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         title="Zoom out"
         aria-label="Zoom out"
       >
@@ -151,7 +151,7 @@ export default function ResumeViewer({ file }: Props) {
       <button
         onClick={handleZoomIn}
         disabled={zoomIndex === ZOOM_LEVELS.length - 1}
-        className="p-1.5 rounded hover:bg-[#E5E5E5] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="p-1.5 rounded hover:bg-black/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         title="Zoom in"
         aria-label="Zoom in"
       >
@@ -160,7 +160,7 @@ export default function ResumeViewer({ file }: Props) {
       <button
         onClick={handleResetZoom}
         disabled={zoomIndex === DEFAULT_ZOOM_INDEX}
-        className="p-1.5 rounded hover:bg-[#E5E5E5] disabled:opacity-40 disabled:cursor-not-allowed transition-colors ml-1"
+        className="p-1.5 rounded hover:bg-black/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors ml-1"
         title="Reset zoom"
         aria-label="Reset zoom"
       >
@@ -172,7 +172,7 @@ export default function ResumeViewer({ file }: Props) {
   // PDF viewer
   if (isPdf) {
     return (
-      <div ref={containerRef} className="flex flex-col h-full bg-[#F5F5F5]">
+      <div ref={containerRef} className="flex flex-col h-full bg-white/40">
         <ZoomControls />
         <div className="flex-1 overflow-auto p-6">
           <div className="flex flex-col items-center">
@@ -182,7 +182,7 @@ export default function ResumeViewer({ file }: Props) {
               onLoadError={onDocumentLoadError}
               loading={
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 size={32} className="animate-spin text-[#737373]" />
+                  <Loader2 size={32} className="animate-spin text-[#525252]" />
                 </div>
               }
             >
@@ -197,7 +197,7 @@ export default function ResumeViewer({ file }: Props) {
                         renderAnnotationLayer={true}
                       />
                     </div>
-                    <p className="text-center text-xs text-[#737373] mt-3">
+                    <p className="text-center text-xs text-[#525252] mt-3">
                       Page {index + 1} of {numPages}
                     </p>
                   </div>
@@ -212,7 +212,7 @@ export default function ResumeViewer({ file }: Props) {
   // DOCX viewer
   if (isDocx && docxHtml) {
     return (
-      <div ref={containerRef} className="flex flex-col h-full bg-[#F5F5F5]">
+      <div ref={containerRef} className="flex flex-col h-full bg-white/40">
         <ZoomControls />
         <div className="flex-1 overflow-auto p-6">
           <div className="flex justify-center">
@@ -233,7 +233,7 @@ export default function ResumeViewer({ file }: Props) {
 
   // Unsupported file type
   return (
-    <div className="flex flex-col items-center justify-center h-full text-[#737373] py-12">
+    <div className="flex flex-col items-center justify-center h-full text-[#525252] py-12">
       <FileText size={48} className="mb-4 opacity-50" />
       <p className="text-sm">Unsupported file format</p>
     </div>

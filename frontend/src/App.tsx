@@ -21,6 +21,7 @@ import { CAREER_SKILLS } from "./config/careerSkills";
 import { CAREER_STRENGTHS } from "./config/careerStrengths";
 import WelcomeStep from "./components/onboarding/WelcomeStep";
 import StaticTextReviewStep from "./components/onboarding/StaticTextReviewStep";
+import SelectionReviewStep from "./components/onboarding/SelectionReviewStep";
 import FinalWordStep from "./components/final-word/FinalWordStep";
 import { countWords, formatWordLabel } from "./utils/wordCount";
 import {
@@ -31,7 +32,6 @@ import {
   generateFinalWord,
   pingHealth,
 } from "./services/api";
-import Button from "./components/common/Button";
 import PhaseIndicator from "./components/common/PhaseIndicator";
 
 type NarrativeState =
@@ -51,6 +51,7 @@ type AppPhase =
   | "careerValue"
   | "careerSkill"
   | "careerStrength"
+  | "selectionReview"
   | "upload"
   | "preview"
   | "categorize"
@@ -124,31 +125,17 @@ function App() {
   const MIN_FINAL_PARAGRAPH_WORDS = 40;
   const MAX_FINAL_PARAGRAPH_WORDS = 180;
 
-  const isOnboardingPhase = [
-    "welcome",
-    "paragraph",
-    "paragraphReview",
-    "sentence",
-    "sentenceReview",
-    "word",
-    "wordReview",
-    "careerValue",
-    "careerSkill",
-    "careerStrength",
+  const isViewportLocked = [
+    "welcome", "paragraph", "paragraphReview", "sentence", "sentenceReview",
+    "word", "wordReview", "careerValue", "careerSkill", "careerStrength",
+    "selectionReview", "upload", "preview", "finalWord",
   ].includes(phase);
+
+  const isScrollableFullscreen = [
+    "categorize", "summary", "finalReflection",
+  ].includes(phase);
+
   const isWelcomePhase = phase === "welcome";
-  const isFullScreenPhase = [
-    "welcome",
-    "paragraph",
-    "paragraphReview",
-    "sentence",
-    "sentenceReview",
-    "word",
-    "wordReview",
-    "careerValue",
-    "careerSkill",
-    "careerStrength",
-  ].includes(phase);
 
   const handleOnboardingStepComplete = (
     field: keyof OnboardingData,
@@ -170,6 +157,7 @@ function App() {
       "careerValue",
       "careerSkill",
       "careerStrength",
+      "selectionReview",
       "upload",
     ];
     const currentIndex = phaseOrder.indexOf(phase);
@@ -190,6 +178,7 @@ function App() {
       "careerValue",
       "careerSkill",
       "careerStrength",
+      "selectionReview",
     ];
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex > 0) {
@@ -423,20 +412,22 @@ function App() {
     setFinalParagraph("");
   };
 
+  // Keep for potential future use
   const substepByPhase: Record<
     AppPhase,
     { step: number; total: number; milestoneLabel: string }
   > = {
-    welcome: { step: 1, total: 10, milestoneLabel: "Intake" },
-    paragraph: { step: 2, total: 10, milestoneLabel: "Intake" },
-    paragraphReview: { step: 3, total: 10, milestoneLabel: "Intake" },
-    sentence: { step: 4, total: 10, milestoneLabel: "Intake" },
-    sentenceReview: { step: 5, total: 10, milestoneLabel: "Intake" },
-    word: { step: 6, total: 10, milestoneLabel: "Intake" },
-    wordReview: { step: 7, total: 10, milestoneLabel: "Intake" },
-    careerValue: { step: 8, total: 10, milestoneLabel: "Intake" },
-    careerSkill: { step: 9, total: 10, milestoneLabel: "Intake" },
-    careerStrength: { step: 10, total: 10, milestoneLabel: "Intake" },
+    welcome: { step: 1, total: 11, milestoneLabel: "Intake" },
+    paragraph: { step: 2, total: 11, milestoneLabel: "Intake" },
+    paragraphReview: { step: 3, total: 11, milestoneLabel: "Intake" },
+    sentence: { step: 4, total: 11, milestoneLabel: "Intake" },
+    sentenceReview: { step: 5, total: 11, milestoneLabel: "Intake" },
+    word: { step: 6, total: 11, milestoneLabel: "Intake" },
+    wordReview: { step: 7, total: 11, milestoneLabel: "Intake" },
+    careerValue: { step: 8, total: 11, milestoneLabel: "Intake" },
+    careerSkill: { step: 9, total: 11, milestoneLabel: "Intake" },
+    careerStrength: { step: 10, total: 11, milestoneLabel: "Intake" },
+    selectionReview: { step: 11, total: 11, milestoneLabel: "Intake" },
     upload: { step: 1, total: 2, milestoneLabel: "Resume" },
     preview: { step: 2, total: 2, milestoneLabel: "Resume" },
     categorize: { step: 1, total: 1, milestoneLabel: "Categorize" },
@@ -444,10 +435,16 @@ function App() {
     summary: { step: 2, total: 2, milestoneLabel: "Rewrite" },
     finalReflection: { step: 1, total: 1, milestoneLabel: "Reflect" },
   };
-  const currentSubstep = substepByPhase[phase];
-  const substepText = `Step ${currentSubstep.step} of ${currentSubstep.total} in ${currentSubstep.milestoneLabel}`;
+
   const finalParagraphWordCount = countWords(finalParagraph);
   const selectedWord = onboardingData.finalWord || onboardingData.word;
+
+  // Suppress unused variable warnings
+  void substepByPhase;
+  void handleReset;
+  void handleExportJSON;
+  void handleExportPDF;
+  void exporting;
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia(
@@ -473,8 +470,12 @@ function App() {
 
   return (
     <div
-      className={`flex flex-col ${
-        isFullScreenPhase ? "h-[100dvh] overflow-hidden" : "min-h-screen bg-[#F5F5F5]"
+      className={`${
+        isViewportLocked
+          ? "h-[100dvh] overflow-hidden"
+          : isScrollableFullscreen
+            ? "min-h-screen"
+            : "min-h-screen"
       } ${isWelcomePhase ? "bg-white" : ""}`}
     >
       {phase === "finalReflection" && showCelebrationBurst && (
@@ -498,585 +499,480 @@ function App() {
 
       {!isWelcomePhase && <PhaseIndicator phase={phase} />}
 
-      {!isFullScreenPhase && (
-        <header className="bg-[#00693E] text-white">
-          <div className="max-w-6xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <a
-                  href="https://careerdesign.dartmouth.edu/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-shrink-0"
-                >
-                  <img
-                    src="/DCCD-Logo.png"
-                    alt="Dartmouth Center for Career Design"
-                    className="h-12 md:h-14"
-                  />
-                </a>
-                <button
-                  onClick={handleReset}
-                  className="hidden sm:block text-left hover:opacity-80 transition-opacity"
-                >
-                  <h1 className="font-serif text-lg md:text-xl">
-                    Narrative by Design Workshop
-                  </h1>
-                </button>
-              </div>
-              {!isOnboardingPhase && phase !== "upload" && (
-                <Button
-                  variant="secondary"
-                  onClick={handleReset}
-                  className="!bg-transparent !text-white !border-white/50 hover:!bg-white/10 hover:!border-white"
-                >
-                  Start Over
-                </Button>
-              )}
-            </div>
-          </div>
-        </header>
+      {phase === "welcome" && (
+        <WelcomeStep onContinue={() => setPhase("paragraph")} />
       )}
 
-      {/* Main Content */}
-      <main
-        className={isFullScreenPhase ? "flex-1" : `flex-1 ${phase === "categorize" ? "py-2 md:py-4" : "py-12"}`}
-      >
-        {isFullScreenPhase ? (
-          <>
-            {phase === "welcome" && (
-              <WelcomeStep onContinue={() => setPhase("paragraph")} />
-            )}
+      {phase === "paragraph" && (
+        <ParagraphStep
+          value={onboardingData.paragraph}
+          onComplete={(value) =>
+            handleOnboardingStepComplete("paragraph", value)
+          }
+          onBack={() => setPhase("welcome")}
+        />
+      )}
 
-            {phase === "paragraph" && (
-              <ParagraphStep
-                value={onboardingData.paragraph}
-                onComplete={(value) =>
-                  handleOnboardingStepComplete("paragraph", value)
-                }
-                onBack={() => setPhase("welcome")}
-              />
-            )}
+      {phase === "paragraphReview" && (
+        <StaticTextReviewStep
+          sectionNumber={1}
+          value={onboardingData.paragraph}
+          onContinue={() => setPhase("sentence")}
+          onBack={() => setPhase("paragraph")}
+        />
+      )}
 
-            {phase === "paragraphReview" && (
-              <StaticTextReviewStep
-                sectionNumber={1}
-                value={onboardingData.paragraph}
-                onContinue={() => setPhase("sentence")}
-                onBack={() => setPhase("paragraph")}
-              />
-            )}
+      {phase === "sentence" && (
+        <SentenceStep
+          value={onboardingData.sentence}
+          previousResponse={onboardingData.paragraph}
+          onComplete={(value) =>
+            handleOnboardingStepComplete("sentence", value)
+          }
+          onBack={handleOnboardingBack}
+        />
+      )}
 
-            {phase === "sentence" && (
-              <SentenceStep
-                value={onboardingData.sentence}
-                onComplete={(value) =>
-                  handleOnboardingStepComplete("sentence", value)
-                }
-                onBack={handleOnboardingBack}
-              />
-            )}
+      {phase === "sentenceReview" && (
+        <StaticTextReviewStep
+          sectionNumber={2}
+          value={onboardingData.sentence}
+          onContinue={() => setPhase("word")}
+          onBack={() => setPhase("sentence")}
+        />
+      )}
 
-            {phase === "sentenceReview" && (
-              <StaticTextReviewStep
-                sectionNumber={2}
-                value={onboardingData.sentence}
-                onContinue={() => setPhase("word")}
-                onBack={() => setPhase("sentence")}
-              />
-            )}
+      {phase === "word" && (
+        <WordStep
+          value={onboardingData.word}
+          previousResponse={onboardingData.sentence}
+          onComplete={(value) =>
+            handleOnboardingStepComplete("word", value)
+          }
+          onBack={handleOnboardingBack}
+        />
+      )}
 
-            {phase === "word" && (
-              <WordStep
-                value={onboardingData.word}
-                onComplete={(value) =>
-                  handleOnboardingStepComplete("word", value)
-                }
-                onBack={handleOnboardingBack}
-              />
-            )}
+      {phase === "wordReview" && (
+        <StaticTextReviewStep
+          sectionNumber={3}
+          value={onboardingData.word}
+          onContinue={() => setPhase("careerValue")}
+          onBack={() => setPhase("word")}
+        />
+      )}
 
-            {phase === "wordReview" && (
-              <StaticTextReviewStep
-                sectionNumber={3}
-                value={onboardingData.word}
-                onContinue={() => setPhase("careerValue")}
-                onBack={() => setPhase("word")}
-              />
-            )}
+      {phase === "careerValue" && (
+        <CareerSelectionStep
+          stepNumber="04"
+          title="VALUES"
+          subtitle="Select exactly 2 values that resonate most strongly with who you are professionally."
+          label="Select your top career values"
+          inputId="career-values-input"
+          options={CAREER_VALUES}
+          values={onboardingData.careerValues}
+          onChange={(values) =>
+            setOnboardingData((prev) => ({ ...prev, careerValues: values }))
+          }
+          onContinue={() => setPhase("careerSkill")}
+          onBack={handleOnboardingBack}
+        />
+      )}
 
-            {phase === "careerValue" && (
-              <CareerSelectionStep
-                stepNumber="04"
-                title="VALUES"
-                subtitle="Select exactly 2 values that resonate most strongly with who you are professionally."
-                label="Select your top career values"
-                inputId="career-values-input"
-                options={CAREER_VALUES}
-                values={onboardingData.careerValues}
-                onChange={(values) =>
-                  setOnboardingData((prev) => ({ ...prev, careerValues: values }))
-                }
-                onContinue={() => setPhase("careerSkill")}
-                onBack={handleOnboardingBack}
-              />
-            )}
+      {phase === "careerSkill" && (
+        <CareerSelectionStep
+          stepNumber="04"
+          title="SKILLS"
+          subtitle="Select exactly 2 skills that describe how you like to contribute."
+          label="Select your top career skills"
+          inputId="career-skills-input"
+          options={CAREER_SKILLS}
+          values={onboardingData.careerSkills}
+          onChange={(values) =>
+            setOnboardingData((prev) => ({ ...prev, careerSkills: values }))
+          }
+          onContinue={() => setPhase("careerStrength")}
+          onBack={handleOnboardingBack}
+        />
+      )}
 
-            {phase === "careerSkill" && (
-              <CareerSelectionStep
-                stepNumber="05"
-                title="SKILLS"
-                subtitle="Select exactly 2 skills that describe how you like to contribute."
-                label="Select your top career skills"
-                inputId="career-skills-input"
-                options={CAREER_SKILLS}
-                values={onboardingData.careerSkills}
-                onChange={(values) =>
-                  setOnboardingData((prev) => ({ ...prev, careerSkills: values }))
-                }
-                onContinue={() => setPhase("careerStrength")}
-                onBack={handleOnboardingBack}
-              />
-            )}
+      {phase === "careerStrength" && (
+        <CareerSelectionStep
+          stepNumber="04"
+          title="STRENGTHS"
+          subtitle="Select exactly 2 strengths that show how you naturally operate."
+          label="Select your top career strengths"
+          inputId="career-strengths-input"
+          options={CAREER_STRENGTHS}
+          values={onboardingData.careerStrengths}
+          onChange={(values) =>
+            setOnboardingData((prev) => ({
+              ...prev,
+              careerStrengths: values,
+            }))
+          }
+          onContinue={() => setPhase("selectionReview")}
+          onBack={handleOnboardingBack}
+        />
+      )}
 
-            {phase === "careerStrength" && (
-              <CareerSelectionStep
-                stepNumber="06"
-                title="STRENGTHS"
-                subtitle="Select exactly 2 strengths that show how you naturally operate."
-                label="Select your top career strengths"
-                inputId="career-strengths-input"
-                options={CAREER_STRENGTHS}
-                values={onboardingData.careerStrengths}
-                onChange={(values) =>
-                  setOnboardingData((prev) => ({
-                    ...prev,
-                    careerStrengths: values,
-                  }))
-                }
-                onContinue={() => setPhase("upload")}
-                onBack={handleOnboardingBack}
-              />
-            )}
-          </>
-        ) : (
-          <div
-            className={`mx-auto px-6 ${
-              phase === "preview" || phase === "summary" || phase === "finalReflection"
-                ? "max-w-7xl"
-                : isOnboardingPhase || phase === "finalWord"
-                  ? "max-w-4xl"
-                  : "max-w-6xl"
-            }`}
-          >
-            <div className="text-center mb-6">
-              <p className="inline-flex items-center px-3 py-1 rounded-full border border-[#E5E5E5] bg-white text-[#525252] text-sm">
-                {substepText}
-              </p>
-            </div>
+      {phase === "selectionReview" && (
+        <SelectionReviewStep
+          values={onboardingData.careerValues}
+          strengths={onboardingData.careerStrengths}
+          skills={onboardingData.careerSkills}
+          onContinue={() => setPhase("upload")}
+          onBack={handleOnboardingBack}
+        />
+      )}
 
-            {/* Phase Title */}
-            {phase === "upload" && (
-              <div className="text-center mb-12">
-                <h2 className="font-serif text-3xl md:text-4xl text-[#262626] mb-3">
-                  Begin Your Career Exploration
-                </h2>
-                <p className="text-[#525252] text-lg max-w-2xl mx-auto">
-                  Start by uploading your resume. We'll help you uncover patterns
-                  in your experiences that reveal your professional strengths.
-                </p>
+      {phase === "upload" && (
+        <FileUpload onFileUploaded={handleFileUploaded} onBack={() => setPhase("selectionReview")} />
+      )}
+
+      {phase === "preview" && (
+        <BulletPreview
+          bullets={bullets}
+          file={uploadedFile}
+          onConfirm={handlePreviewConfirmed}
+          onBack={() => setPhase("upload")}
+        />
+      )}
+
+      {phase === "categorize" && (
+        <BinContainer
+          bins={bins}
+          uncategorized={uncategorized}
+          totalBullets={totalBullets}
+          onBinsChange={setBins}
+          onUncategorizedChange={setUncategorized}
+          onTotalChange={setTotalBullets}
+          onComplete={handleCategorizationComplete}
+          onBack={() => setPhase("preview")}
+        />
+      )}
+
+      {phase === "finalWord" && (
+        <FinalWordStep
+          originalWord={onboardingData.word}
+          suggestedState={aiWordState}
+          onComplete={handleFinalWordComplete}
+          onBack={() => setPhase("categorize")}
+        />
+      )}
+
+      {phase === "summary" && analysisResult && (
+        <div className="min-h-screen bg-[#469B57] px-6 md:px-10 py-8 md:py-12">
+          <div className="mb-6 md:mb-8">
+            <p className="text-5xl md:text-7xl font-bold text-[#003D1C]">08</p>
+          </div>
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-medium tracking-[0.12em] text-white mb-2 uppercase">
+              Rewrite Your Story
+            </h2>
+            <p className="text-white text-sm md:text-base max-w-2xl mx-auto">
+              Draft your interview-ready response to "Tell me about yourself"
+              using the value-focused perspectives below.
+            </p>
+          </div>
+          <div className="max-w-5xl mx-auto space-y-8">
+            <div className="flex flex-col gap-3 items-center text-center">
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <span className="text-white/70 text-sm">Defining word:</span>
+                <span className="bg-white/80 text-[#003D1C] px-3 py-1 rounded-full text-sm font-medium">
+                  {onboardingData.finalWord || onboardingData.word}
+                </span>
               </div>
-            )}
-
-          {phase === "preview" && (
-            <div className="text-center mb-8">
-              <h2 className="font-serif text-3xl text-[#262626] mb-3">
-                Review Your Experiences
-              </h2>
-              <p className="text-[#525252] max-w-2xl mx-auto">
-                Compare your original resume with the extracted experiences.
-                Edit or add items as needed.
-              </p>
-            </div>
-          )}
-
-          {phase === "categorize" && (
-            <div className="text-center mb-2">
-              <h2 className="font-serif text-2xl md:text-3xl text-[#262626] mb-1">
-                Categorize Your Experiences
-              </h2>
-              <p className="text-[#525252] text-sm max-w-2xl mx-auto">
-                Reflect on each experience and place it in the category that
-                best captures what it represents about you.
-              </p>
-            </div>
-          )}
-
-          {phase === "summary" && (
-            <div className="text-center mb-8">
-              <h2 className="font-serif text-3xl text-[#262626] mb-3">
-                Rewrite Your Story
-              </h2>
-              <p className="text-[#525252] max-w-2xl mx-auto">
-                Draft your interview-ready response to "Tell me about yourself"
-                using the value-focused perspectives below.
-              </p>
-            </div>
-          )}
-
-          {/* Phase Content */}
-
-          {phase === "upload" && (
-            <div className="space-y-8">
-              <FileUpload onFileUploaded={handleFileUploaded} />
-              <div className="flex justify-between">
-                <Button variant="secondary" onClick={() => setPhase("careerStrength")}>
-                  Back
-                </Button>
-                <div />
-              </div>
-            </div>
-          )}
-
-          {phase === "preview" && (
-            <BulletPreview
-              bullets={bullets}
-              file={uploadedFile}
-              onConfirm={handlePreviewConfirmed}
-              onBack={() => setPhase("upload")}
-            />
-          )}
-
-          {phase === "categorize" && (
-            <BinContainer
-              bins={bins}
-              uncategorized={uncategorized}
-              totalBullets={totalBullets}
-              onBinsChange={setBins}
-              onUncategorizedChange={setUncategorized}
-              onTotalChange={setTotalBullets}
-              onComplete={handleCategorizationComplete}
-              onBack={() => setPhase("preview")}
-            />
-          )}
-
-          {phase === "finalWord" && (
-            <FinalWordStep
-              originalWord={onboardingData.word}
-              suggestedState={aiWordState}
-              onComplete={handleFinalWordComplete}
-              onBack={() => setPhase("categorize")}
-            />
-          )}
-
-          {phase === "summary" && analysisResult && (
-            <div className="space-y-8">
-              <div className="border-t border-[#E5E5E5] pt-6 flex flex-col gap-3 items-center text-center">
+              {onboardingData.careerSkills.length > 0 && (
                 <div className="flex flex-wrap items-center justify-center gap-2">
-                  <span className="text-[#737373] text-sm">Defining word:</span>
-                  <span className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium">
-                    {onboardingData.finalWord || onboardingData.word}
+                  <span className="text-white/70 text-sm">
+                    Top skills:
                   </span>
-                </div>
-                {onboardingData.careerSkills.length > 0 && (
-                  <div className="flex flex-wrap items-center justify-center gap-2">
-                    <span className="text-[#737373] text-sm">
-                      Top skills:
+                  {onboardingData.careerSkills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="bg-white/80 text-[#003D1C] px-3 py-1 rounded-full text-sm font-medium"
+                    >
+                      {skill}
                     </span>
-                    {onboardingData.careerSkills.map((skill) => (
-                      <span
-                        key={skill}
-                        className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {onboardingData.careerStrengths.length > 0 && (
-                  <div className="flex flex-wrap items-center justify-center gap-2">
-                    <span className="text-[#737373] text-sm">
-                      Top strengths:
-                    </span>
-                    {onboardingData.careerStrengths.map((strength) => (
-                      <span
-                        key={strength}
-                        className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium"
-                      >
-                        {strength}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              {onboardingData.careerValues.length > 0 && (
-                <div
-                  className={
-                    onboardingData.careerValues.length === 1
-                      ? ""
-                      : onboardingData.careerValues.length === 2
-                        ? "grid grid-cols-1 lg:grid-cols-2 gap-6"
-                        : "grid grid-cols-1 lg:grid-cols-3 gap-6"
-                  }
-                >
-                  {onboardingData.careerValues.map((value) => (
-                    <NarrativeAnalysisPanel
-                      key={value}
-                      narrativeState={
-                        narrativeStates[value] || { status: "idle" }
-                      }
-                      word={onboardingData.finalWord || onboardingData.word}
-                      careerValue={value}
-                      onRetry={() => handleNarrativeRetry(value)}
-                    />
                   ))}
                 </div>
               )}
-
-              <div className="bg-white border border-[#E5E5E5] rounded-md p-8 text-center">
-                <h3 className="font-serif text-xl text-[#262626] mb-2">
-                  Write Your Final Paragraph
-                </h3>
-                <p className="text-[#525252] mb-6 max-w-2xl mx-auto">
-                  Use the prompts above to craft a single, authentic paragraph
-                  in your own words.
-                </p>
-                <div className="max-w-3xl mx-auto text-left">
-                  <label
-                    htmlFor="final-paragraph"
-                    className="block text-sm font-semibold text-[#404040] mb-2"
-                  >
-                    Your final response
-                  </label>
-                  <textarea
-                    id="final-paragraph"
-                    value={finalParagraph}
-                    onChange={(event) => {
-                      if (
-                        countWords(event.target.value) <= MAX_FINAL_PARAGRAPH_WORDS
-                      ) {
-                        setFinalParagraph(event.target.value);
-                      }
-                    }}
-                    placeholder="I am a professional who..."
-                    rows={6}
-                    className={`
-                      w-full px-4 py-3 rounded
-                      border text-base font-sans
-                      placeholder:text-[#A3A3A3]
-                      focus:outline-none focus:ring-2 focus:ring-[#00693E]/10
-                      transition-colors duration-200
-                      resize-none
-                      ${
-                        finalParagraphWordCount > 0 &&
-                        finalParagraphWordCount < MIN_FINAL_PARAGRAPH_WORDS
-                          ? "border-[#9D162E] focus:border-[#9D162E]"
-                          : "border-[#D4D4D4] focus:border-[#00693E]"
-                      }
-                    `}
-                  />
-                  <div className="flex justify-between mt-2">
+              {onboardingData.careerStrengths.length > 0 && (
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <span className="text-white/70 text-sm">
+                    Top strengths:
+                  </span>
+                  {onboardingData.careerStrengths.map((strength) => (
                     <span
-                      className={`text-sm ${
-                        finalParagraphWordCount > 0 &&
-                        finalParagraphWordCount < MIN_FINAL_PARAGRAPH_WORDS
-                          ? "text-[#9D162E]"
-                          : "text-[#525252]"
-                      }`}
+                      key={strength}
+                      className="bg-white/80 text-[#003D1C] px-3 py-1 rounded-full text-sm font-medium"
                     >
-                      {finalParagraphWordCount < MIN_FINAL_PARAGRAPH_WORDS
-                        ? `${MIN_FINAL_PARAGRAPH_WORDS - finalParagraphWordCount} more words needed`
-                        : "Looking good!"}
+                      {strength}
                     </span>
-                    <span
-                      className={`text-sm ${
-                        finalParagraphWordCount > MAX_FINAL_PARAGRAPH_WORDS * 0.9
-                          ? "text-[#9D162E]"
-                          : "text-[#525252]"
-                      }`}
-                    >
-                      {formatWordLabel(finalParagraphWordCount)}/
-                      {MAX_FINAL_PARAGRAPH_WORDS}
-                    </span>
-                  </div>
+                  ))}
                 </div>
-              </div>
-
-              {showSummaryDetails && (
-                <>
-                  <DistributionChart
-                    analytics={analysisResult.analytics}
-                    bins={bins}
-                  />
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <BinList bins={bins} />
-                    <InsightsPanel analytics={analysisResult.analytics} />
-                  </div>
-
-                  {/* Export Actions */}
-                  <div className="bg-white border border-[#E5E5E5] rounded-md p-8">
-                    <div className="text-center">
-                      <h3 className="font-serif text-xl text-[#262626] mb-2">
-                        Save Your Analysis
-                      </h3>
-                      <p className="text-[#525252] mb-6">
-                        Download your career profile for future reference or
-                        sharing.
-                      </p>
-                      <div className="flex gap-4 justify-center">
-                        <Button
-                          variant="secondary"
-                          onClick={handleExportJSON}
-                          disabled={exporting !== null}
-                        >
-                          {exporting === "json" ? "Exporting..." : "Download JSON"}
-                        </Button>
-                        <Button
-                          onClick={handleExportPDF}
-                          disabled={exporting !== null}
-                        >
-                          {exporting === "pdf" ? "Exporting..." : "Download PDF"}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </>
               )}
-              <div className="flex justify-between">
-                <Button variant="secondary" onClick={() => setPhase("finalWord")}>
-                  Back
-                </Button>
-                <Button
-                  onClick={() => setPhase("finalReflection")}
-                  disabled={finalParagraphWordCount < MIN_FINAL_PARAGRAPH_WORDS}
-                >
-                  Continue
-                </Button>
-              </div>
             </div>
-          )}
-
-          {phase === "finalReflection" && (
-            <div className="space-y-8">
-              <div className="text-center">
-                <h2 className="font-serif text-3xl md:text-4xl text-[#262626] mb-3">
-                  Reflect on Your Growth
-                </h2>
-                <p className="text-[#525252] max-w-2xl mx-auto">
-                  Compare your original story with the version you crafted
-                  today. Notice how your values, skills, and strengths shaped
-                  the way you describe yourself.
-                </p>
+            {onboardingData.careerValues.length > 0 && (
+              <div
+                className={
+                  onboardingData.careerValues.length === 1
+                    ? ""
+                    : onboardingData.careerValues.length === 2
+                      ? "grid grid-cols-1 lg:grid-cols-2 gap-6"
+                      : "grid grid-cols-1 lg:grid-cols-3 gap-6"
+                }
+              >
+                {onboardingData.careerValues.map((value) => (
+                  <NarrativeAnalysisPanel
+                    key={value}
+                    narrativeState={
+                      narrativeStates[value] || { status: "idle" }
+                    }
+                    word={onboardingData.finalWord || onboardingData.word}
+                    careerValue={value}
+                    onRetry={() => handleNarrativeRetry(value)}
+                  />
+                ))}
               </div>
+            )}
 
-              <div className="bg-white border border-[#E5E5E5] rounded-md p-6">
-                <h3 className="font-serif text-xl text-[#262626] mb-4">
-                  Your Story Core
-                </h3>
-                <div className="flex flex-wrap items-center gap-2 mb-4">
-                  <span className="text-[#737373] text-sm">Defining word:</span>
-                  <span className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium">
-                    {selectedWord}
+            <div className="bg-white/80 rounded-xl p-8 text-center">
+              <h3 className="text-xl font-medium text-[#262626] mb-2">
+                Write Your Final Paragraph
+              </h3>
+              <p className="text-[#525252] mb-6 max-w-2xl mx-auto">
+                Use the prompts above to craft a single, authentic paragraph
+                in your own words.
+              </p>
+              <div className="max-w-3xl mx-auto text-left">
+                <label
+                  htmlFor="final-paragraph"
+                  className="block text-sm font-semibold text-[#404040] mb-2"
+                >
+                  Your final response
+                </label>
+                <textarea
+                  id="final-paragraph"
+                  value={finalParagraph}
+                  onChange={(event) => {
+                    if (
+                      countWords(event.target.value) <= MAX_FINAL_PARAGRAPH_WORDS
+                    ) {
+                      setFinalParagraph(event.target.value);
+                    }
+                  }}
+                  placeholder="I am a professional who..."
+                  rows={6}
+                  className={`
+                    w-full px-4 py-3 rounded-xl
+                    bg-white/60 border-0 text-base font-sans
+                    placeholder:text-[#A3A3A3]
+                    focus:outline-none focus:ring-2 focus:ring-[#469B57]/30
+                    transition-colors duration-200
+                    resize-none
+                    ${
+                      finalParagraphWordCount > 0 &&
+                      finalParagraphWordCount < MIN_FINAL_PARAGRAPH_WORDS
+                        ? "ring-2 ring-[#9D162E]/30"
+                        : ""
+                    }
+                  `}
+                />
+                <div className="flex justify-between mt-2">
+                  <span
+                    className={`text-sm ${
+                      finalParagraphWordCount > 0 &&
+                      finalParagraphWordCount < MIN_FINAL_PARAGRAPH_WORDS
+                        ? "text-[#9D162E]"
+                        : "text-[#525252]"
+                    }`}
+                  >
+                    {finalParagraphWordCount < MIN_FINAL_PARAGRAPH_WORDS
+                      ? `${MIN_FINAL_PARAGRAPH_WORDS - finalParagraphWordCount} more words needed`
+                      : "Looking good!"}
+                  </span>
+                  <span
+                    className={`text-sm ${
+                      finalParagraphWordCount > MAX_FINAL_PARAGRAPH_WORDS * 0.9
+                        ? "text-[#9D162E]"
+                        : "text-[#525252]"
+                    }`}
+                  >
+                    {formatWordLabel(finalParagraphWordCount)}/
+                    {MAX_FINAL_PARAGRAPH_WORDS}
                   </span>
                 </div>
-                {onboardingData.careerValues.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-2 mb-3">
-                    <span className="text-[#737373] text-sm">Top values:</span>
-                    {onboardingData.careerValues.map((value) => (
-                      <span
-                        key={value}
-                        className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium"
-                      >
-                        {value}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {onboardingData.careerSkills.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-2 mb-3">
-                    <span className="text-[#737373] text-sm">Top skills:</span>
-                    {onboardingData.careerSkills.map((skill) => (
-                      <span
-                        key={skill}
-                        className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {onboardingData.careerStrengths.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-2 mb-4">
-                    <span className="text-[#737373] text-sm">Top strengths:</span>
-                    {onboardingData.careerStrengths.map((strength) => (
-                      <span
-                        key={strength}
-                        className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium"
-                      >
-                        {strength}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
+            </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white border border-[#E5E5E5] rounded-md p-6">
-                  <h3 className="font-serif text-xl text-[#262626] mb-3">
-                    Original Paragraph
-                  </h3>
-                  <p className="text-[#525252] leading-relaxed">
-                    {onboardingData.paragraph}
-                  </p>
+            {showSummaryDetails && (
+              <>
+                <DistributionChart
+                  analytics={analysisResult.analytics}
+                  bins={bins}
+                />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <BinList bins={bins} />
+                  <InsightsPanel analytics={analysisResult.analytics} />
                 </div>
-                <div className="bg-white border border-[#E5E5E5] rounded-md p-6">
-                  <h3 className="font-serif text-xl text-[#262626] mb-3">
-                    Rewritten Paragraph
-                  </h3>
-                  <p className="text-[#525252] leading-relaxed">
-                    {finalParagraph}
-                  </p>
+
+                <div className="bg-white/80 rounded-xl p-8">
+                  <div className="text-center">
+                    <h3 className="text-xl font-medium text-[#262626] mb-2">
+                      Save Your Analysis
+                    </h3>
+                    <p className="text-[#525252] mb-6">
+                      Download your career profile for future reference or
+                      sharing.
+                    </p>
+                    <div className="flex gap-4 justify-center">
+                      <button
+                        onClick={handleExportJSON}
+                        disabled={exporting !== null}
+                        className="px-6 py-2 border border-black/10 text-[#262626] rounded-xl hover:bg-white/60 disabled:opacity-40 transition-colors"
+                      >
+                        {exporting === "json" ? "Exporting..." : "Download JSON"}
+                      </button>
+                      <button
+                        onClick={handleExportPDF}
+                        disabled={exporting !== null}
+                        className="px-6 py-2 bg-[#366946] text-white rounded-xl hover:bg-[#2E5A3C] disabled:opacity-40 transition-colors"
+                      >
+                        {exporting === "pdf" ? "Exporting..." : "Download PDF"}
+                      </button>
+                    </div>
+                  </div>
                 </div>
+              </>
+            )}
+            <div className="flex justify-between items-center">
+              <button
+                onClick={() => setPhase("finalWord")}
+                className="text-[#003D1C]/70 hover:text-[#003D1C] text-sm font-medium transition-colors"
+              >
+                &larr; Back
+              </button>
+              <button
+                onClick={() => setPhase("finalReflection")}
+                disabled={finalParagraphWordCount < MIN_FINAL_PARAGRAPH_WORDS}
+                className="px-10 py-3 bg-[#366946] text-white uppercase tracking-[0.16em] text-sm md:text-base font-medium rounded-xl hover:bg-[#2E5A3C] active:bg-[#264D33] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {phase === "finalReflection" && (
+        <div className="min-h-screen bg-[#469B57] px-6 md:px-10 py-8 md:py-12">
+          <div className="mb-6 md:mb-8">
+            <p className="text-5xl md:text-7xl font-bold text-[#003D1C]">09</p>
+          </div>
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-medium tracking-[0.12em] text-white mb-2 uppercase">
+              Reflect on Your Growth
+            </h2>
+            <p className="text-white text-sm md:text-base max-w-2xl mx-auto">
+              Compare your original story with the version you crafted
+              today. Notice how your values, skills, and strengths shaped
+              the way you describe yourself.
+            </p>
+          </div>
+          <div className="max-w-5xl mx-auto space-y-8">
+            <div className="bg-white/80 rounded-xl p-6">
+              <h3 className="text-xl font-medium text-[#262626] mb-4">
+                Your Story Core
+              </h3>
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                <span className="text-[#525252] text-sm">Defining word:</span>
+                <span className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium">
+                  {selectedWord}
+                </span>
               </div>
+              {onboardingData.careerValues.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <span className="text-[#525252] text-sm">Top values:</span>
+                  {onboardingData.careerValues.map((value) => (
+                    <span
+                      key={value}
+                      className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium"
+                    >
+                      {value}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {onboardingData.careerSkills.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <span className="text-[#525252] text-sm">Top skills:</span>
+                  {onboardingData.careerSkills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {onboardingData.careerStrengths.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <span className="text-[#525252] text-sm">Top strengths:</span>
+                  {onboardingData.careerStrengths.map((strength) => (
+                    <span
+                      key={strength}
+                      className="bg-[#00693E]/10 text-[#00693E] px-3 py-1 rounded-full text-sm font-medium"
+                    >
+                      {strength}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
 
-              <div className="bg-white border border-[#E5E5E5] rounded-md p-6 text-center">
-                <h4 className="font-serif text-lg text-[#262626] mb-2">
-                  Reflection Prompt
-                </h4>
-                <p className="text-[#525252]">
-                  What feels more authentic in your rewritten paragraph, and
-                  what new possibilities do you see in how you present your
-                  story?
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white/80 rounded-xl p-6">
+                <h3 className="text-xl font-medium text-[#262626] mb-3">
+                  Original Paragraph
+                </h3>
+                <p className="text-[#525252] leading-relaxed">
+                  {onboardingData.paragraph}
                 </p>
               </div>
-
-              <div className="flex justify-between">
-                <Button variant="secondary" onClick={() => setPhase("summary")}>
-                  Back
-                </Button>
-                <div />
+              <div className="bg-white/80 rounded-xl p-6">
+                <h3 className="text-xl font-medium text-[#262626] mb-3">
+                  Rewritten Paragraph
+                </h3>
+                <p className="text-[#525252] leading-relaxed">
+                  {finalParagraph}
+                </p>
               </div>
             </div>
-          )}
-          </div>
-        )}
-      </main>
 
-      {!isFullScreenPhase && (
-        <footer className="bg-[#003D1C] text-white/80">
-          <div className="max-w-6xl mx-auto px-6 py-6">
-            <div className="text-center">
-              <p className="text-sm">Dartmouth Center for Career Design</p>
-              <p className="text-xs text-white/60 mt-1">
-                A tool for exploring your professional identity through
-                self-reflection
-              </p>
-              <p className="text-xs text-white/50 mt-3">
-                Copyright © 2026 Dartmouth College
+            <div className="bg-white/80 rounded-xl p-6 text-center">
+              <h4 className="text-lg font-medium text-[#262626] mb-2">
+                Reflection Prompt
+              </h4>
+              <p className="text-[#525252]">
+                What feels more authentic in your rewritten paragraph, and
+                what new possibilities do you see in how you present your
+                story?
               </p>
             </div>
+
+            <div>
+              <button
+                onClick={() => setPhase("summary")}
+                className="text-[#003D1C]/70 hover:text-[#003D1C] text-sm font-medium transition-colors"
+              >
+                &larr; Back
+              </button>
+            </div>
           </div>
-        </footer>
+        </div>
       )}
     </div>
   );

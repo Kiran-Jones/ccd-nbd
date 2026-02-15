@@ -61,9 +61,9 @@ export default function DraggableBullet({ bullet, onDuplicate, onDelete, fixedHe
       {...listeners}
       {...attributes}
       className={`
-        bg-white border border-[#E5E5E5] rounded-md p-3 shadow-sm
+        bg-white/90 border border-black/10 rounded-xl p-3 shadow-sm
         transition-all duration-200 cursor-grab active:cursor-grabbing
-        ${isDragging ? 'opacity-50 shadow-lg z-50' : 'hover:border-[#D4D4D4] hover:shadow-md'}
+        ${isDragging ? 'opacity-50 shadow-lg z-50' : 'hover:border-black/20 hover:shadow-md'}
         ${fixedHeight ? 'h-[120px] overflow-hidden' : ''}
       `}
     >
@@ -110,7 +110,7 @@ export default function DraggableBullet({ bullet, onDuplicate, onDelete, fixedHe
                 onDuplicate();
               }}
               onPointerDown={(e) => e.stopPropagation()}
-              className="p-2 text-[#737373] hover:text-[#00693E] hover:bg-[#E8F5E9] rounded-md transition-all hover:scale-110 border border-transparent hover:border-[#00693E]/20"
+              className="p-2 text-[#737373] hover:text-[#003D1C] hover:bg-[#469B57]/10 rounded-md transition-all hover:scale-110 border border-transparent hover:border-[#003D1C]/20"
               title="Create a copy"
               aria-label="Create a copy of this item"
             >

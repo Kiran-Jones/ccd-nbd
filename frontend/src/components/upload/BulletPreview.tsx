@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Trash2, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { BulletPoint } from '../../types/BulletPoint';
-import Button from '../common/Button';
 import ResumeViewer from './ResumeViewer';
 
 interface Props {
@@ -49,120 +48,145 @@ export default function BulletPreview({ bullets, file, onConfirm, onBack }: Prop
   const validBullets = editedBullets.filter((b) => b.text.trim());
 
   return (
-    <div className="w-full">
-      {/* Two-column layout on desktop, stacked on mobile */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left column: Resume Viewer */}
-        <div className="bg-white border border-[#E5E5E5] rounded-md shadow-sm overflow-hidden">
-          {/* Collapsible header on mobile */}
-          <button
-            onClick={() => setShowResume(!showResume)}
-            className="lg:hidden w-full px-6 py-4 flex items-center justify-between border-b border-[#E5E5E5] bg-[#F5F5F5]"
-          >
-            <h3 className="font-serif text-lg text-[#262626]">Original Resume</h3>
-            {showResume ? (
-              <ChevronUp size={20} className="text-[#737373]" />
-            ) : (
-              <ChevronDown size={20} className="text-[#737373]" />
-            )}
-          </button>
-
-          {/* Desktop header */}
-          <div className="hidden lg:block px-6 py-4 border-b border-[#E5E5E5]">
-            <h3 className="font-serif text-lg text-[#262626]">Original Resume</h3>
-            <p className="text-sm text-[#737373] mt-1">
-              Compare with extracted experiences
-            </p>
-          </div>
-
-          {/* Resume content */}
-          <div
-            className={`${
-              showResume ? 'block' : 'hidden'
-            } lg:block h-[500px] lg:h-[600px]`}
-          >
-            <ResumeViewer file={file} />
-          </div>
-        </div>
-
-        {/* Right column: Bullet List */}
-        <div className="bg-white border border-[#E5E5E5] rounded-md shadow-sm flex flex-col">
-          {/* Header */}
-          <div className="px-6 py-4 border-b border-[#E5E5E5]">
-            <div className="flex items-baseline justify-between">
-              <h3 className="font-serif text-lg text-[#262626]">
-                Extracted Experiences
-              </h3>
-              <span className="text-sm text-[#737373]">
-                {validBullets.length} item{validBullets.length !== 1 ? 's' : ''}
-              </span>
-            </div>
-            <p className="text-sm text-[#737373] mt-1">
-              Edit, remove, or add items
-            </p>
-          </div>
-
-          {/* Bullet list */}
-          <div className="flex-1 px-6 py-4 overflow-hidden">
-            <div className="space-y-3 h-[400px] lg:h-[480px] overflow-y-auto pr-2">
-              {editedBullets.map((bullet, index) => (
-                <div
-                  key={bullet.id}
-                  className="flex items-start gap-3 p-3 bg-[#F5F5F5] rounded border border-transparent hover:border-[#D4D4D4] transition-colors"
-                >
-                  <span className="text-[#A3A3A3] text-sm font-medium min-w-[20px] pt-2">
-                    {index + 1}.
-                  </span>
-                  <textarea
-                    value={bullet.text}
-                    onChange={(e) => handleTextChange(bullet.id, e.target.value)}
-                    className="flex-1 p-2 bg-white border border-[#D4D4D4] rounded text-[#262626] text-sm leading-relaxed resize-none focus:outline-none focus:border-[#00693E] focus:ring-1 focus:ring-[#00693E]/10"
-                    rows={2}
-                    placeholder="Describe an experience..."
-                  />
-                  <button
-                    onClick={() => handleDelete(bullet.id)}
-                    className="p-1.5 text-[#A3A3A3] hover:text-[#9D162E] hover:bg-[#FFEBEE] rounded transition-colors"
-                    title="Remove"
-                    aria-label="Remove this item"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {/* Add button */}
-            <button
-              onClick={handleAdd}
-              className="flex items-center gap-2 mt-4 text-[#00693E] hover:text-[#003D1C] font-medium text-sm transition-colors"
-            >
-              <Plus size={16} />
-              Add another experience
-            </button>
-          </div>
-
-          {/* Footer actions */}
-          <div className="px-6 py-4 bg-[#F5F5F5] border-t border-[#E5E5E5] flex justify-between items-center">
-            <Button variant="text" onClick={onBack}>
-              Go Back
-            </Button>
-            <Button
-              onClick={() => onConfirm(validBullets)}
-              disabled={validBullets.length === 0}
-            >
-              Continue to Categorize
-            </Button>
-          </div>
-        </div>
+    <div className="h-[100dvh] bg-[#469B57] flex flex-col px-6 md:px-10 py-6 md:py-8">
+      {/* Step number */}
+      <div className="mb-4 md:mb-6 shrink-0">
+        <p className="text-5xl md:text-7xl font-bold text-[#003D1C]">05</p>
       </div>
 
-      {/* Helper text */}
-      {validBullets.length === 0 && (
-        <p className="text-center text-[#737373] text-sm mt-6">
-          Add at least one experience to continue.
+      {/* Heading */}
+      <div className="text-center mb-4 md:mb-6 shrink-0">
+        <h2 className="text-2xl md:text-3xl font-medium tracking-[0.12em] text-white mb-2 uppercase">
+          Review Your Experiences
+        </h2>
+        <p className="text-white text-sm md:text-base">
+          Compare your original resume with the extracted experiences. Edit or add items as needed.
         </p>
-      )}
+      </div>
+
+      {/* Two-column grid — fills remaining space */}
+      <div className="flex-1 min-h-0 max-w-6xl mx-auto w-full">
+        <div className="h-full grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left column: Resume Viewer */}
+          <div className="bg-white/80 rounded-xl overflow-hidden flex flex-col min-h-0">
+            {/* Collapsible header on mobile */}
+            <button
+              onClick={() => setShowResume(!showResume)}
+              className="lg:hidden w-full px-6 py-3 flex items-center justify-between border-b border-black/10 shrink-0"
+            >
+              <h3 className="text-lg font-medium text-[#262626]">Original Resume</h3>
+              {showResume ? (
+                <ChevronUp size={20} className="text-[#525252]" />
+              ) : (
+                <ChevronDown size={20} className="text-[#525252]" />
+              )}
+            </button>
+
+            {/* Desktop header */}
+            <div className="hidden lg:block px-6 py-3 border-b border-black/10 shrink-0">
+              <h3 className="text-lg font-medium text-[#262626]">Original Resume</h3>
+              <p className="text-sm text-[#525252] mt-1">
+                Compare with extracted experiences
+              </p>
+            </div>
+
+            {/* Resume content — fills remaining column height */}
+            <div
+              className={`${
+                showResume ? 'block' : 'hidden'
+              } lg:block flex-1 min-h-0 overflow-auto`}
+            >
+              <ResumeViewer file={file} />
+            </div>
+          </div>
+
+          {/* Right column: Bullet List */}
+          <div className="bg-white/80 rounded-xl flex flex-col min-h-0">
+            {/* Header */}
+            <div className="px-6 py-3 border-b border-black/10 shrink-0">
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-lg font-medium text-[#262626]">
+                  Extracted Experiences
+                </h3>
+                <span className="text-sm text-[#525252]">
+                  {validBullets.length} item{validBullets.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+              <p className="text-sm text-[#525252] mt-1">
+                Edit, remove, or add items
+              </p>
+            </div>
+
+            {/* Bullet list — scrolls within remaining space */}
+            <div className="flex-1 min-h-0 px-6 py-4 overflow-y-auto">
+              <div className="space-y-3">
+                {editedBullets.map((bullet, index) => (
+                  <div
+                    key={bullet.id}
+                    className="flex items-start gap-3 p-3 bg-white/60 rounded-xl transition-colors"
+                  >
+                    <span className="text-[#525252]/60 text-sm font-medium min-w-[20px] pt-2">
+                      {index + 1}.
+                    </span>
+                    <textarea
+                      value={bullet.text}
+                      onChange={(e) => handleTextChange(bullet.id, e.target.value)}
+                      className="flex-1 p-2 bg-white rounded-xl text-[#262626] text-sm leading-relaxed resize-none border-0 focus:outline-none focus:ring-2 focus:ring-[#469B57]/30"
+                      rows={2}
+                      placeholder="Describe an experience..."
+                    />
+                    <button
+                      onClick={() => handleDelete(bullet.id)}
+                      className="p-1.5 text-[#525252]/60 hover:text-[#9D162E] rounded transition-colors"
+                      title="Remove"
+                      aria-label="Remove this item"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add button */}
+              <button
+                onClick={handleAdd}
+                className="flex items-center gap-2 mt-4 text-[#003D1C] hover:text-[#003D1C]/80 font-medium text-sm transition-colors"
+              >
+                <Plus size={16} />
+                Add another experience
+              </button>
+            </div>
+
+            {/* Footer with continue button */}
+            <div className="px-6 py-3 border-t border-black/10 flex justify-end shrink-0">
+              <button
+                onClick={() => onConfirm(validBullets)}
+                disabled={validBullets.length === 0}
+                className="px-10 py-3 bg-[#366946] text-white uppercase tracking-[0.16em] text-sm md:text-base font-medium rounded-xl hover:bg-[#2E5A3C] active:bg-[#264D33] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Empty state */}
+        {validBullets.length === 0 && (
+          <p className="text-center text-white/70 text-sm mt-4">
+            Add at least one experience to continue.
+          </p>
+        )}
+      </div>
+
+      {/* Back button — always visible at bottom */}
+      <div className="shrink-0 pt-4">
+        <button
+          onClick={onBack}
+          className="text-[#003D1C]/70 hover:text-[#003D1C] text-sm font-medium transition-colors"
+        >
+          &larr; Back
+        </button>
+      </div>
     </div>
   );
 }

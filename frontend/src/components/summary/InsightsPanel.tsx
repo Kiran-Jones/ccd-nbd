@@ -6,10 +6,10 @@ interface Props {
 
 export default function InsightsPanel({ analytics }: Props) {
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-md">
+    <div className="bg-white/80 rounded-xl">
       {/* Header */}
-      <div className="px-8 py-6 border-b border-[#E5E5E5]">
-        <h3 className="font-serif text-2xl text-[#262626]">
+      <div className="px-8 py-6 border-b border-black/10">
+        <h3 className="text-2xl font-medium text-[#262626]">
           Insights & Reflections
         </h3>
         <p className="text-[#525252] mt-2">
@@ -19,11 +19,11 @@ export default function InsightsPanel({ analytics }: Props) {
 
       <div className="p-8">
         {/* Top Category Highlight */}
-        <div className="bg-[#00693E] text-white rounded-md p-6 mb-8">
+        <div className="bg-[#366946] text-white rounded-xl p-6 mb-8">
           <p className="text-sm uppercase tracking-wide opacity-80 mb-2">
             Strongest Emphasis
           </p>
-          <p className="font-serif text-2xl">
+          <p className="text-2xl font-medium">
             {analytics.top_category}
           </p>
           <p className="text-sm opacity-90 mt-2 leading-relaxed">
@@ -34,7 +34,7 @@ export default function InsightsPanel({ analytics }: Props) {
 
         {/* Suggestions */}
         <div>
-          <h4 className="font-serif text-lg text-[#262626] mb-4">
+          <h4 className="text-lg font-medium text-[#262626] mb-4">
             Things to Consider
           </h4>
 
@@ -47,9 +47,9 @@ export default function InsightsPanel({ analytics }: Props) {
               {analytics.suggestions.map((suggestion, index) => (
                 <li
                   key={index}
-                  className="flex items-start gap-4 p-4 bg-[#F5F5F5] rounded-md"
+                  className="flex items-start gap-4 p-4 bg-white/60 rounded-xl"
                 >
-                  <span className="flex-shrink-0 w-6 h-6 bg-[#00693E] text-white rounded-full flex items-center justify-center text-sm font-medium">
+                  <span className="flex-shrink-0 w-6 h-6 bg-[#366946] text-white rounded-full flex items-center justify-center text-sm font-medium">
                     {index + 1}
                   </span>
                   <p className="text-[#404040] leading-relaxed">{suggestion}</p>
@@ -60,7 +60,7 @@ export default function InsightsPanel({ analytics }: Props) {
         </div>
 
         {/* Reflection Prompt */}
-        <div className="mt-8 pt-6 border-t border-[#E5E5E5]">
+        <div className="mt-8 pt-6 border-t border-black/10">
           <p className="text-sm text-[#737373] italic leading-relaxed">
             "Your resume tells a story. Consider how these categories
             reflect not just what you've done, but who you're becoming

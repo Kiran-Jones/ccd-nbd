@@ -61,29 +61,24 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
     <div
       ref={setNodeRef}
       className={`
-        rounded-lg transition-all duration-200
-        border-2
+        bg-white/80 rounded-xl transition-all duration-200
+        border border-black/10
         flex flex-col
         h-[200px] md:h-[220px]
         ${isOver ? 'ring-2 ring-offset-2 scale-105' : ''}
       `}
       style={{
-        backgroundColor: `${config.color}12`,
-        borderColor: isOver ? config.color : `${config.color}40`,
         // @ts-expect-error CSS custom property
         '--tw-ring-color': config.color,
       }}
     >
       {/* Header */}
       <div
-        className="px-3 py-2 rounded-t-md flex-shrink-0"
-        style={{
-          backgroundColor: `${config.color}20`,
-        }}
+        className="px-3 py-2 rounded-t-xl flex-shrink-0 border-b border-black/10"
       >
         <div className="flex items-center justify-between">
           <h4
-            className="font-serif text-lg font-medium"
+            className="text-lg font-medium"
             style={{ color: config.color }}
           >
             {config.label}
@@ -104,7 +99,7 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
       <div className="p-2 pb-3 pr-3 flex-1 min-h-0 overflow-visible">
         {bin.bullets.length === 0 ? (
           <div
-            className="h-full flex items-center justify-center border-2 border-dashed rounded-md"
+            className="h-full flex items-center justify-center border-2 border-dashed rounded-lg"
             style={{ borderColor: `${config.color}40` }}
           >
             <p className="text-sm" style={{ color: `${config.color}80` }}>
@@ -118,26 +113,24 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
               {/* Stack effect layers - peek out from bottom-right */}
               {totalBullets >= 3 && (
                 <div
-                  className="absolute rounded border bg-white"
+                  className="absolute bg-white/60 rounded-lg border border-black/10"
                   style={{
                     top: '6px',
                     left: '6px',
                     right: '-6px',
                     bottom: '-6px',
-                    borderColor: `${config.color}30`,
                     zIndex: 0,
                   }}
                 />
               )}
               {totalBullets >= 2 && (
                 <div
-                  className="absolute rounded border bg-white"
+                  className="absolute bg-white/60 rounded-lg border border-black/10"
                   style={{
                     top: '3px',
                     left: '3px',
                     right: '-3px',
                     bottom: '-3px',
-                    borderColor: `${config.color}35`,
                     zIndex: 1,
                   }}
                 />
@@ -145,8 +138,7 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
 
               {/* Top card */}
               <div
-                className="absolute inset-0 z-10 flex flex-col bg-white rounded border overflow-hidden"
-                style={{ borderColor: `${config.color}40` }}
+                className="absolute inset-0 z-10 flex flex-col bg-white rounded-lg border border-black/10 overflow-hidden"
               >
                 {/* Card content */}
                 <div className="flex items-start gap-2 p-2.5 flex-1 min-h-0">
@@ -213,8 +205,7 @@ export default function DroppableBin({ bin, config, onRemoveBullet }: Props) {
             {/* Navigation for multiple items - always visible when multiple */}
             {hasMultiple && (
               <div
-                className="flex items-center justify-center gap-3 py-1 rounded-md flex-shrink-0 mt-auto"
-                style={{ backgroundColor: `${config.color}10` }}
+                className="flex items-center justify-center gap-3 py-1 bg-white/60 rounded-lg flex-shrink-0 mt-auto"
               >
                 <button
                   onClick={handlePrev}

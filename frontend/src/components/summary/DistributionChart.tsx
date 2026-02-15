@@ -29,10 +29,10 @@ export default function DistributionChart({ analytics, bins }: Props) {
   });
 
   return (
-    <div className="bg-white border border-[#E5E5E5] rounded-md">
+    <div className="bg-white/80 rounded-xl">
       {/* Header */}
-      <div className="px-8 py-6 border-b border-[#E5E5E5]">
-        <h3 className="font-serif text-2xl text-[#262626]">
+      <div className="px-8 py-6 border-b border-black/10">
+        <h3 className="text-2xl font-medium text-[#262626]">
           Your Profile Distribution
         </h3>
         <p className="text-[#525252] mt-2">
@@ -60,7 +60,7 @@ export default function DistributionChart({ analytics, bins }: Props) {
               <YAxis
                 type="category"
                 dataKey="name"
-                tick={{ fill: '#404040', fontSize: 14, fontFamily: 'Georgia, serif' }}
+                tick={{ fill: '#404040', fontSize: 14 }}
                 axisLine={false}
                 tickLine={false}
                 width={90}
@@ -70,8 +70,8 @@ export default function DistributionChart({ analytics, bins }: Props) {
                   if (active && payload && payload.length) {
                     const item = payload[0].payload;
                     return (
-                      <div className="bg-white border border-[#E5E5E5] rounded-md p-3 shadow-md">
-                        <p className="font-serif text-[#262626] font-medium">
+                      <div className="bg-white border border-black/10 rounded-xl p-3 shadow-md">
+                        <p className="text-[#262626] font-medium">
                           {item.name}
                         </p>
                         <p className="text-sm text-[#525252] mt-1">
@@ -93,7 +93,7 @@ export default function DistributionChart({ analytics, bins }: Props) {
         </div>
 
         {/* Legend */}
-        <div className="mt-8 pt-6 border-t border-[#E5E5E5]">
+        <div className="mt-8 pt-6 border-t border-black/10">
           <div className="flex flex-wrap gap-6 justify-center">
             {data.map((item) => (
               <div key={item.name} className="flex items-center gap-2">

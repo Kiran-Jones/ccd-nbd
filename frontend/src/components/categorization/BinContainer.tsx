@@ -11,7 +11,6 @@ import { BulletPoint } from '../../types/BulletPoint';
 import { BINS } from '../../config/bins';
 import DroppableBin from './DroppableBin';
 import BulletPool from './BulletPool';
-import Button from '../common/Button';
 
 interface Props {
   bins: Bin[];
@@ -121,9 +120,24 @@ export default function BinContainer({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      {/* Row layout: all bins aligned on one horizontal level */}
-      <div className="relative">
-        <div className="mx-auto max-w-6xl">
+      <div className="min-h-screen bg-[#469B57] px-6 md:px-10 py-6 md:py-8">
+        {/* Step number */}
+        <div className="mb-4 md:mb-6">
+          <p className="text-5xl md:text-7xl font-bold text-[#003D1C]">06</p>
+        </div>
+
+        {/* Heading */}
+        <div className="text-center mb-4 md:mb-6">
+          <h2 className="text-2xl md:text-3xl font-medium tracking-[0.12em] text-white mb-2 uppercase">
+            Categorize Your Experiences
+          </h2>
+          <p className="text-white text-sm md:text-base">
+            Reflect on each experience and place it in the category that best captures what it represents about you.
+          </p>
+        </div>
+
+        {/* Bins grid */}
+        <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 items-start">
             <div className="w-full max-w-[320px] justify-self-center relative z-10">
               {skillsetBin && (
@@ -160,6 +174,7 @@ export default function BinContainer({
             </div>
           </div>
 
+          {/* Bullet pool */}
           <div className="mt-6 lg:mt-8 flex justify-center">
             <div className="w-full max-w-md relative z-20">
               <BulletPool
@@ -170,24 +185,32 @@ export default function BinContainer({
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Drag Overlay */}
-      <DragOverlay>
-        {activeBullet && (
-          <div className="bg-white border-2 border-[#00693E] rounded-md p-3 shadow-xl max-w-sm rotate-2 scale-105">
-            <p className="text-sm text-[#404040] line-clamp-4">{activeBullet.text}</p>
-          </div>
-        )}
-      </DragOverlay>
+        {/* Drag overlay */}
+        <DragOverlay>
+          {activeBullet && (
+            <div className="bg-white/90 border-2 border-[#003D1C] rounded-xl p-3 shadow-xl max-w-sm rotate-2 scale-105">
+              <p className="text-sm text-[#404040] line-clamp-4">{activeBullet.text}</p>
+            </div>
+          )}
+        </DragOverlay>
 
-      <div className="flex justify-between items-center mt-6">
-        <Button variant="secondary" onClick={onBack}>
-          Back
-        </Button>
-        <Button onClick={onComplete} disabled={!canComplete}>
-          View Summary
-        </Button>
+        {/* Navigation */}
+        <div className="flex justify-between items-center mt-6 max-w-6xl mx-auto">
+          <button
+            onClick={onBack}
+            className="text-[#003D1C]/70 hover:text-[#003D1C] text-sm font-medium transition-colors"
+          >
+            &larr; Back
+          </button>
+          <button
+            onClick={onComplete}
+            disabled={!canComplete}
+            className="px-10 py-3 bg-[#366946] text-white uppercase tracking-[0.16em] text-sm md:text-base font-medium rounded-xl hover:bg-[#2E5A3C] active:bg-[#264D33] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            View Summary
+          </button>
+        </div>
       </div>
     </DndContext>
   );
