@@ -122,11 +122,11 @@ export default function WelcomeStep({ onContinue }: Props) {
   return (
     <div className="h-full w-full flex flex-col bg-white">
       <div className="relative w-full h-[44vh] md:h-[50vh] flex">
-        <div className="h-full" style={{ width: "40%", backgroundColor: "#469B57" }} />
-        <div className="h-full" style={{ width: "24%", backgroundColor: "#59AF6A" }} />
+        <div className="h-full" style={{ width: "40%", backgroundColor: "#366946" }} />
+        <div className="h-full" style={{ width: "24%", backgroundColor: "#469B57" }} />
         <div className="h-full" style={{ width: "18%", backgroundColor: "#6FC37F" }} />
-        <div className="h-full" style={{ width: "12%", backgroundColor: "#8BD89A" }} />
-        <div className="h-full" style={{ width: "6%", backgroundColor: "#ADF5BB" }} />
+        <div className="h-full" style={{ width: "12%", backgroundColor: "#92D79F" }} />
+        <div className="h-full" style={{ width: "6%", backgroundColor: "#B1E3BB" }} />
         <img
           src="/LonePine_Rev.png"
           alt="Dartmouth pine logo"
@@ -177,7 +177,7 @@ export default function WelcomeStep({ onContinue }: Props) {
               >
                 <Button
                   onClick={onContinue}
-                  className="!rounded-xl !px-8 !py-3 !text-sm md:!text-base !font-medium !tracking-[0.16em] !uppercase !bg-[#469B57] hover:!bg-[#3F8F50] active:!bg-[#357A44] !shadow-none"
+                  className="!rounded-xl !px-8 !py-3 !text-sm md:!text-base !font-medium !tracking-[0.16em] !uppercase !bg-[#366946] hover:!bg-[#2E5A3C] active:!bg-[#264D33] !shadow-none"
                 >
                   CONTINUE
                 </Button>

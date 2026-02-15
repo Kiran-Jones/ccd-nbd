@@ -1,4 +1,4 @@
-const PHASE_COLORS = ["#469B57", "#59AF6A", "#6FC37F", "#8BD89A", "#ADF5BB"];
+const PHASE_COLORS = ["#366946", "#469B57", "#6FC37F", "#92D79F", "#B1E3BB"];
 
 const MILESTONE_IDS = ["intake", "resume", "categorize", "rewrite", "reflect"] as const;
 

@@ -35,7 +35,7 @@ export default function WordStep({
     text.length > 0 && (!isLettersOnly || wordCount !== REQUIRED_WORDS);
 
   return (
-    <div className="min-h-[100dvh] bg-[#8BD89A] flex flex-col px-6 md:px-10 py-8 md:py-12">
+    <div className="min-h-[100dvh] bg-[#92D79F] flex flex-col px-6 md:px-10 py-8 md:py-12">
       <div className="mb-8 md:mb-12">
         <p className="text-5xl md:text-7xl font-bold text-[#003D1C]">03</p>
       </div>
