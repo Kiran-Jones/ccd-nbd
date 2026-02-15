@@ -15,7 +15,10 @@ import NarrativeAnalysisPanel from "./components/summary/NarrativeAnalysisPanel"
 import ParagraphStep from "./components/onboarding/ParagraphStep";
 import SentenceStep from "./components/onboarding/SentenceStep";
 import WordStep from "./components/onboarding/WordStep";
-import CareerValueStep from "./components/onboarding/CareerValueStep";
+import CareerSelectionStep from "./components/onboarding/CareerSelectionStep";
+import { CAREER_VALUES } from "./config/careerValues";
+import { CAREER_SKILLS } from "./config/careerSkills";
+import { CAREER_STRENGTHS } from "./config/careerStrengths";
 import WelcomeStep from "./components/onboarding/WelcomeStep";
 import StaticTextReviewStep from "./components/onboarding/StaticTextReviewStep";
 import FinalWordStep from "./components/final-word/FinalWordStep";
@@ -29,6 +32,7 @@ import {
   pingHealth,
 } from "./services/api";
 import Button from "./components/common/Button";
+import PhaseIndicator from "./components/common/PhaseIndicator";
 
 type NarrativeState =
   | { status: "idle" }
@@ -45,6 +49,8 @@ type AppPhase =
   | "word"
   | "wordReview"
   | "careerValue"
+  | "careerSkill"
+  | "careerStrength"
   | "upload"
   | "preview"
   | "categorize"
@@ -127,6 +133,21 @@ function App() {
     "word",
     "wordReview",
     "careerValue",
+    "careerSkill",
+    "careerStrength",
+  ].includes(phase);
+  const isWelcomePhase = phase === "welcome";
+  const isFullScreenPhase = [
+    "welcome",
+    "paragraph",
+    "paragraphReview",
+    "sentence",
+    "sentenceReview",
+    "word",
+    "wordReview",
+    "careerValue",
+    "careerSkill",
+    "careerStrength",
   ].includes(phase);
 
   const handleOnboardingStepComplete = (
@@ -147,21 +168,14 @@ function App() {
       "word",
       "wordReview",
       "careerValue",
+      "careerSkill",
+      "careerStrength",
       "upload",
     ];
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       setPhase(phaseOrder[currentIndex + 1]);
     }
-  };
-
-  const handleCareerSelectionsComplete = (payload: {
-    careerValues: string[];
-    careerSkills: string[];
-    careerStrengths: string[];
-  }) => {
-    setOnboardingData((prev) => ({ ...prev, ...payload }));
-    setPhase("upload");
   };
 
   const handleOnboardingBack = () => {
@@ -174,6 +188,8 @@ function App() {
       "word",
       "wordReview",
       "careerValue",
+      "careerSkill",
+      "careerStrength",
     ];
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex > 0) {
@@ -407,41 +423,20 @@ function App() {
     setFinalParagraph("");
   };
 
-  const milestones = [
-    { id: "intake", label: "Intake" },
-    { id: "resume", label: "Resume" },
-    { id: "categorize", label: "Categorize" },
-    { id: "rewrite", label: "Rewrite" },
-    { id: "reflect", label: "Reflect" },
-  ] as const;
-  const milestoneByPhase: Record<AppPhase, (typeof milestones)[number]["id"]> = {
-    welcome: "intake",
-    paragraph: "intake",
-    paragraphReview: "intake",
-    sentence: "intake",
-    sentenceReview: "intake",
-    word: "intake",
-    wordReview: "intake",
-    careerValue: "intake",
-    upload: "resume",
-    preview: "resume",
-    categorize: "categorize",
-    finalWord: "rewrite",
-    summary: "rewrite",
-    finalReflection: "reflect",
-  };
   const substepByPhase: Record<
     AppPhase,
     { step: number; total: number; milestoneLabel: string }
   > = {
-    welcome: { step: 1, total: 8, milestoneLabel: "Intake" },
-    paragraph: { step: 2, total: 8, milestoneLabel: "Intake" },
-    paragraphReview: { step: 3, total: 8, milestoneLabel: "Intake" },
-    sentence: { step: 4, total: 8, milestoneLabel: "Intake" },
-    sentenceReview: { step: 5, total: 8, milestoneLabel: "Intake" },
-    word: { step: 6, total: 8, milestoneLabel: "Intake" },
-    wordReview: { step: 7, total: 8, milestoneLabel: "Intake" },
-    careerValue: { step: 8, total: 8, milestoneLabel: "Intake" },
+    welcome: { step: 1, total: 10, milestoneLabel: "Intake" },
+    paragraph: { step: 2, total: 10, milestoneLabel: "Intake" },
+    paragraphReview: { step: 3, total: 10, milestoneLabel: "Intake" },
+    sentence: { step: 4, total: 10, milestoneLabel: "Intake" },
+    sentenceReview: { step: 5, total: 10, milestoneLabel: "Intake" },
+    word: { step: 6, total: 10, milestoneLabel: "Intake" },
+    wordReview: { step: 7, total: 10, milestoneLabel: "Intake" },
+    careerValue: { step: 8, total: 10, milestoneLabel: "Intake" },
+    careerSkill: { step: 9, total: 10, milestoneLabel: "Intake" },
+    careerStrength: { step: 10, total: 10, milestoneLabel: "Intake" },
     upload: { step: 1, total: 2, milestoneLabel: "Resume" },
     preview: { step: 2, total: 2, milestoneLabel: "Resume" },
     categorize: { step: 1, total: 1, milestoneLabel: "Categorize" },
@@ -449,10 +444,6 @@ function App() {
     summary: { step: 2, total: 2, milestoneLabel: "Rewrite" },
     finalReflection: { step: 1, total: 1, milestoneLabel: "Reflect" },
   };
-  const currentMilestoneId = milestoneByPhase[phase];
-  const currentMilestoneIndex = milestones.findIndex(
-    (milestone) => milestone.id === currentMilestoneId,
-  );
   const currentSubstep = substepByPhase[phase];
   const substepText = `Step ${currentSubstep.step} of ${currentSubstep.total} in ${currentSubstep.milestoneLabel}`;
   const finalParagraphWordCount = countWords(finalParagraph);
@@ -481,7 +472,11 @@ function App() {
   }, [phase]);
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] flex flex-col">
+    <div
+      className={`flex flex-col ${
+        isFullScreenPhase ? "h-[100dvh] overflow-hidden" : "min-h-screen bg-[#F5F5F5]"
+      } ${isWelcomePhase ? "bg-white" : ""}`}
+    >
       {phase === "finalReflection" && showCelebrationBurst && (
         <div className="screen-celebration" aria-hidden="true">
           {CELEBRATION_CONFETTI.map((piece, index) => (
@@ -501,113 +496,197 @@ function App() {
         </div>
       )}
 
-      {/* Header */}
-      <header className="bg-[#00693E] text-white">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <a
-                href="https://careerdesign.dartmouth.edu/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-shrink-0"
-              >
-                <img
-                  src="/DCCD-Logo.png"
-                  alt="Dartmouth Center for Career Design"
-                  className="h-12 md:h-14"
-                />
-              </a>
-              <button
-                onClick={handleReset}
-                className="hidden sm:block text-left hover:opacity-80 transition-opacity"
-              >
-                <h1 className="font-serif text-lg md:text-xl">
-                  Narrative by Design Workshop
-                </h1>
-              </button>
-            </div>
-            {!isOnboardingPhase && phase !== "upload" && (
-              <Button
-                variant="secondary"
-                onClick={handleReset}
-                className="!bg-transparent !text-white !border-white/50 hover:!bg-white/10 hover:!border-white"
-              >
-                Start Over
-              </Button>
-            )}
-          </div>
-        </div>
+      {!isWelcomePhase && <PhaseIndicator phase={phase} />}
 
-        <div className="bg-[#003D1C]">
-          <div className="max-w-6xl mx-auto px-6 py-3">
-            <div className="flex items-center justify-center gap-2 md:gap-3">
-              {milestones.map((milestone, index) => (
-                <div key={milestone.id} className="flex items-center">
-                  <span
-                    className={`
-                      text-xs md:text-sm px-3 py-1 rounded-full border font-medium
-                      ${
-                        index < currentMilestoneIndex
-                          ? "bg-white text-[#00693E] border-white"
-                          : index === currentMilestoneIndex
-                            ? "bg-white/15 text-white border-white/60"
-                            : "bg-transparent text-white/60 border-white/30"
-                      }
-                    `}
-                  >
-                    {milestone.label}
-                  </span>
-                  {index < milestones.length - 1 && (
-                    <div
-                      className={`
-                        w-4 md:w-8 h-px mx-1 md:mx-2
-                        ${
-                          index < currentMilestoneIndex
-                            ? "bg-white/90"
-                            : "bg-white/30"
-                        }
-                      `}
-                    />
-                  )}
-                </div>
-              ))}
+      {!isFullScreenPhase && (
+        <header className="bg-[#00693E] text-white">
+          <div className="max-w-6xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <a
+                  href="https://careerdesign.dartmouth.edu/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-shrink-0"
+                >
+                  <img
+                    src="/DCCD-Logo.png"
+                    alt="Dartmouth Center for Career Design"
+                    className="h-12 md:h-14"
+                  />
+                </a>
+                <button
+                  onClick={handleReset}
+                  className="hidden sm:block text-left hover:opacity-80 transition-opacity"
+                >
+                  <h1 className="font-serif text-lg md:text-xl">
+                    Narrative by Design Workshop
+                  </h1>
+                </button>
+              </div>
+              {!isOnboardingPhase && phase !== "upload" && (
+                <Button
+                  variant="secondary"
+                  onClick={handleReset}
+                  className="!bg-transparent !text-white !border-white/50 hover:!bg-white/10 hover:!border-white"
+                >
+                  Start Over
+                </Button>
+              )}
             </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Main Content */}
       <main
-        className={`flex-1 ${phase === "categorize" ? "py-2 md:py-4" : "py-12"}`}
+        className={isFullScreenPhase ? "flex-1" : `flex-1 ${phase === "categorize" ? "py-2 md:py-4" : "py-12"}`}
       >
-        <div
-          className={`mx-auto px-6 ${
-            phase === "preview" || phase === "summary" || phase === "finalReflection"
-              ? "max-w-7xl"
-              : isOnboardingPhase || phase === "finalWord"
-                ? "max-w-4xl"
-                : "max-w-6xl"
-          }`}
-        >
-          <div className="text-center mb-6">
-            <p className="inline-flex items-center px-3 py-1 rounded-full border border-[#E5E5E5] bg-white text-[#525252] text-sm">
-              {substepText}
-            </p>
-          </div>
+        {isFullScreenPhase ? (
+          <>
+            {phase === "welcome" && (
+              <WelcomeStep onContinue={() => setPhase("paragraph")} />
+            )}
 
-          {/* Phase Title */}
-          {phase === "upload" && (
-            <div className="text-center mb-12">
-              <h2 className="font-serif text-3xl md:text-4xl text-[#262626] mb-3">
-                Begin Your Career Exploration
-              </h2>
-              <p className="text-[#525252] text-lg max-w-2xl mx-auto">
-                Start by uploading your resume. We'll help you uncover patterns
-                in your experiences that reveal your professional strengths.
+            {phase === "paragraph" && (
+              <ParagraphStep
+                value={onboardingData.paragraph}
+                onComplete={(value) =>
+                  handleOnboardingStepComplete("paragraph", value)
+                }
+                onBack={() => setPhase("welcome")}
+              />
+            )}
+
+            {phase === "paragraphReview" && (
+              <StaticTextReviewStep
+                sectionNumber={1}
+                value={onboardingData.paragraph}
+                onContinue={() => setPhase("sentence")}
+                onBack={() => setPhase("paragraph")}
+              />
+            )}
+
+            {phase === "sentence" && (
+              <SentenceStep
+                value={onboardingData.sentence}
+                onComplete={(value) =>
+                  handleOnboardingStepComplete("sentence", value)
+                }
+                onBack={handleOnboardingBack}
+              />
+            )}
+
+            {phase === "sentenceReview" && (
+              <StaticTextReviewStep
+                sectionNumber={2}
+                value={onboardingData.sentence}
+                onContinue={() => setPhase("word")}
+                onBack={() => setPhase("sentence")}
+              />
+            )}
+
+            {phase === "word" && (
+              <WordStep
+                value={onboardingData.word}
+                onComplete={(value) =>
+                  handleOnboardingStepComplete("word", value)
+                }
+                onBack={handleOnboardingBack}
+              />
+            )}
+
+            {phase === "wordReview" && (
+              <StaticTextReviewStep
+                sectionNumber={3}
+                value={onboardingData.word}
+                onContinue={() => setPhase("careerValue")}
+                onBack={() => setPhase("word")}
+              />
+            )}
+
+            {phase === "careerValue" && (
+              <CareerSelectionStep
+                stepNumber="04"
+                title="VALUES"
+                subtitle="Select exactly 2 values that resonate most strongly with who you are professionally."
+                label="Select your top career values"
+                inputId="career-values-input"
+                options={CAREER_VALUES}
+                values={onboardingData.careerValues}
+                onChange={(values) =>
+                  setOnboardingData((prev) => ({ ...prev, careerValues: values }))
+                }
+                onContinue={() => setPhase("careerSkill")}
+                onBack={handleOnboardingBack}
+              />
+            )}
+
+            {phase === "careerSkill" && (
+              <CareerSelectionStep
+                stepNumber="05"
+                title="SKILLS"
+                subtitle="Select exactly 2 skills that describe how you like to contribute."
+                label="Select your top career skills"
+                inputId="career-skills-input"
+                options={CAREER_SKILLS}
+                values={onboardingData.careerSkills}
+                onChange={(values) =>
+                  setOnboardingData((prev) => ({ ...prev, careerSkills: values }))
+                }
+                onContinue={() => setPhase("careerStrength")}
+                onBack={handleOnboardingBack}
+              />
+            )}
+
+            {phase === "careerStrength" && (
+              <CareerSelectionStep
+                stepNumber="06"
+                title="STRENGTHS"
+                subtitle="Select exactly 2 strengths that show how you naturally operate."
+                label="Select your top career strengths"
+                inputId="career-strengths-input"
+                options={CAREER_STRENGTHS}
+                values={onboardingData.careerStrengths}
+                onChange={(values) =>
+                  setOnboardingData((prev) => ({
+                    ...prev,
+                    careerStrengths: values,
+                  }))
+                }
+                onContinue={() => setPhase("upload")}
+                onBack={handleOnboardingBack}
+              />
+            )}
+          </>
+        ) : (
+          <div
+            className={`mx-auto px-6 ${
+              phase === "preview" || phase === "summary" || phase === "finalReflection"
+                ? "max-w-7xl"
+                : isOnboardingPhase || phase === "finalWord"
+                  ? "max-w-4xl"
+                  : "max-w-6xl"
+            }`}
+          >
+            <div className="text-center mb-6">
+              <p className="inline-flex items-center px-3 py-1 rounded-full border border-[#E5E5E5] bg-white text-[#525252] text-sm">
+                {substepText}
               </p>
             </div>
-          )}
+
+            {/* Phase Title */}
+            {phase === "upload" && (
+              <div className="text-center mb-12">
+                <h2 className="font-serif text-3xl md:text-4xl text-[#262626] mb-3">
+                  Begin Your Career Exploration
+                </h2>
+                <p className="text-[#525252] text-lg max-w-2xl mx-auto">
+                  Start by uploading your resume. We'll help you uncover patterns
+                  in your experiences that reveal your professional strengths.
+                </p>
+              </div>
+            )}
 
           {phase === "preview" && (
             <div className="text-center mb-8">
@@ -646,96 +725,12 @@ function App() {
           )}
 
           {/* Phase Content */}
-          {phase === "welcome" && (
-            <WelcomeStep onContinue={() => setPhase("paragraph")} />
-          )}
-
-          {phase === "paragraph" && (
-            <ParagraphStep
-              value={onboardingData.paragraph}
-              onComplete={(value) =>
-                handleOnboardingStepComplete("paragraph", value)
-              }
-              onBack={() => setPhase("welcome")}
-            />
-          )}
-
-          {phase === "paragraphReview" && (
-            <StaticTextReviewStep
-              title="Start With Your Real Intro"
-              subtitle="Review your response before moving to the next step."
-              label="Your spoken-style introduction"
-              value={onboardingData.paragraph}
-              onContinue={() => setPhase("sentence")}
-              onBack={() => setPhase("paragraph")}
-              stepNumber={2}
-              totalSteps={7}
-            />
-          )}
-
-          {phase === "sentence" && (
-            <SentenceStep
-              value={onboardingData.sentence}
-              paragraphContext={onboardingData.paragraph}
-              onComplete={(value) =>
-                handleOnboardingStepComplete("sentence", value)
-              }
-              onBack={handleOnboardingBack}
-            />
-          )}
-
-          {phase === "sentenceReview" && (
-            <StaticTextReviewStep
-              title="Boil It Down"
-              subtitle="Review your response before moving to the next step."
-              label="One clear sentence"
-              value={onboardingData.sentence}
-              onContinue={() => setPhase("word")}
-              onBack={() => setPhase("sentence")}
-              stepNumber={4}
-              totalSteps={7}
-            />
-          )}
-
-          {phase === "word" && (
-            <WordStep
-              value={onboardingData.word}
-              sentenceContext={onboardingData.sentence}
-              onComplete={(value) =>
-                handleOnboardingStepComplete("word", value)
-              }
-              onBack={handleOnboardingBack}
-            />
-          )}
-
-          {phase === "wordReview" && (
-            <StaticTextReviewStep
-              title="Name The Thread"
-              subtitle="Review your response before moving to the next step."
-              label="Your central word"
-              value={onboardingData.word}
-              onContinue={() => setPhase("careerValue")}
-              onBack={() => setPhase("word")}
-              stepNumber={6}
-              totalSteps={7}
-            />
-          )}
-
-          {phase === "careerValue" && (
-            <CareerValueStep
-              values={onboardingData.careerValues}
-              skills={onboardingData.careerSkills}
-              strengths={onboardingData.careerStrengths}
-              onComplete={handleCareerSelectionsComplete}
-              onBack={handleOnboardingBack}
-            />
-          )}
 
           {phase === "upload" && (
             <div className="space-y-8">
               <FileUpload onFileUploaded={handleFileUploaded} />
               <div className="flex justify-between">
-                <Button variant="secondary" onClick={() => setPhase("careerValue")}>
+                <Button variant="secondary" onClick={() => setPhase("careerStrength")}>
                   Back
                 </Button>
                 <div />
@@ -1063,24 +1058,26 @@ function App() {
               </div>
             </div>
           )}
-        </div>
+          </div>
+        )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-[#003D1C] text-white/80">
-        <div className="max-w-6xl mx-auto px-6 py-6">
-          <div className="text-center">
-            <p className="text-sm">Dartmouth Center for Career Design</p>
-            <p className="text-xs text-white/60 mt-1">
-              A tool for exploring your professional identity through
-              self-reflection
-            </p>
-            <p className="text-xs text-white/50 mt-3">
-              Copyright © 2026 Dartmouth College
-            </p>
+      {!isFullScreenPhase && (
+        <footer className="bg-[#003D1C] text-white/80">
+          <div className="max-w-6xl mx-auto px-6 py-6">
+            <div className="text-center">
+              <p className="text-sm">Dartmouth Center for Career Design</p>
+              <p className="text-xs text-white/60 mt-1">
+                A tool for exploring your professional identity through
+                self-reflection
+              </p>
+              <p className="text-xs text-white/50 mt-3">
+                Copyright © 2026 Dartmouth College
+              </p>
+            </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 }

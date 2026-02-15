@@ -46,8 +46,8 @@ export default {
         'info-text': '#004A7C',
       },
       fontFamily: {
-        serif: ["'Dartmouth Ruzicka'", 'Georgia', "'EB Garamond'", 'serif'],
-        sans: ["'National 2'", 'Arial', 'Aptos', 'sans-serif'],
+        serif: ["'Circular Std'", "'Avenir Next'", "'Segoe UI'", 'sans-serif'],
+        sans: ["'Circular Std'", "'Avenir Next'", "'Segoe UI'", 'sans-serif'],
       },
       fontSize: {
         xs: ['0.75rem', { lineHeight: '1.4' }],

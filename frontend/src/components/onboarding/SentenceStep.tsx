@@ -1,10 +1,8 @@
 import { useState } from "react";
-import OnboardingStep from "./OnboardingStep";
 import { countWords, formatWordLabel } from "../../utils/wordCount";
 
 interface Props {
   value: string;
-  paragraphContext: string;
   onComplete: (value: string) => void;
   onBack: () => void;
 }
@@ -14,7 +12,6 @@ const MAX_WORDS = 35;
 
 export default function SentenceStep({
   value,
-  paragraphContext,
   onComplete,
   onBack,
 }: Props) {
@@ -23,7 +20,7 @@ export default function SentenceStep({
   const wordCount = countWords(text);
   const isValid = wordCount >= MIN_WORDS && wordCount <= MAX_WORDS;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     if (countWords(newValue) <= MAX_WORDS) {
       setText(newValue);
@@ -31,72 +28,69 @@ export default function SentenceStep({
   };
 
   return (
-    <OnboardingStep
-      title="Boil It Down"
-      subtitle="Condense your paragraph into one complete, honest sentence with one clear idea."
-      onContinue={() => onComplete(text)}
-      onBack={onBack}
-      canContinue={isValid}
-      stepNumber={3}
-      totalSteps={7}
-    >
-      <div>
-        {paragraphContext.trim().length > 0 && (
-          <div className="mb-6 p-4 rounded border border-[#E5E5E5] bg-[#F5F5F5]">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#525252] mb-2">
-              Your submitted paragraph
-            </p>
-            <p className="text-sm text-[#404040] leading-relaxed whitespace-pre-wrap">
-              {paragraphContext}
-            </p>
-          </div>
-        )}
-        <label
-          htmlFor="sentence-input"
-          className="block text-sm font-semibold text-[#404040] mb-2"
-        >
-          One clear sentence
-        </label>
-        <input
-          id="sentence-input"
-          type="text"
-          value={text}
-          onChange={handleChange}
-          placeholder="The common thread in my story is..."
-          className={`
-            w-full px-4 py-3 rounded
-            border text-base font-sans
-            placeholder:text-[#A3A3A3]
-            focus:outline-none focus:ring-2 focus:ring-[#00693E]/10
-            transition-colors duration-200
-            ${
-              wordCount > 0 && wordCount < MIN_WORDS
-                ? "border-[#9D162E] focus:border-[#9D162E]"
-                : "border-[#D4D4D4] focus:border-[#00693E]"
-            }
-          `}
-        />
-        <div className="flex justify-between mt-2">
+    <div className="min-h-[100dvh] bg-[#8BD89A] flex flex-col px-6 md:px-10 py-8 md:py-12">
+      <div className="mb-8 md:mb-12">
+        <p className="text-5xl md:text-7xl font-bold text-[#003D1C]">02</p>
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center max-w-2xl mx-auto w-full">
+        <h2 className="text-2xl md:text-3xl font-medium tracking-[0.12em] text-[#003D1C] mb-2 text-center uppercase">
+          Core Sentence
+        </h2>
+        <p className="text-[#003D1C]/70 text-sm md:text-base mb-6 text-center">
+          Condense your paragraph into one complete, honest sentence with one clear idea.
+        </p>
+
+        <div className="relative w-full">
+          <textarea
+            id="sentence-input"
+            value={text}
+            onChange={handleChange}
+            placeholder="The common thread in my story is..."
+            rows={2}
+            className={`
+              w-full px-4 py-3 rounded-xl
+              bg-white/80 text-base font-sans text-[#262626]
+              placeholder:text-[#A3A3A3]
+              focus:outline-none focus:ring-2 focus:ring-[#469B57]/30
+              transition-colors duration-200
+              resize-none border-0
+            `}
+          />
           <span
-            className={`text-sm ${
+            className={`absolute bottom-3 right-4 text-sm ${
               wordCount > 0 && wordCount < MIN_WORDS
                 ? "text-[#9D162E]"
-                : "text-[#525252]"
-            }`}
-          >
-            {wordCount < MIN_WORDS
-              ? `${MIN_WORDS - wordCount} more words needed`
-              : "Looking good!"}
-          </span>
-          <span
-            className={`text-sm ${
-              wordCount > MAX_WORDS * 0.9 ? "text-[#9D162E]" : "text-[#525252]"
+                : "text-[#525252]/60"
             }`}
           >
             {formatWordLabel(wordCount)}/{MAX_WORDS}
           </span>
         </div>
+
+        {wordCount > 0 && wordCount < MIN_WORDS && (
+          <p className="text-sm text-[#9D162E] mt-2">
+            {MIN_WORDS - wordCount} more words needed
+          </p>
+        )}
+
+        <button
+          onClick={() => onComplete(text)}
+          disabled={!isValid}
+          className="mt-8 px-10 py-3 bg-[#469B57] text-white uppercase tracking-[0.16em] text-sm md:text-base font-medium rounded-xl hover:bg-[#3F8F50] active:bg-[#357A44] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          Continue
+        </button>
       </div>
-    </OnboardingStep>
+
+      <div className="mt-auto pt-6">
+        <button
+          onClick={onBack}
+          className="text-[#003D1C]/70 hover:text-[#003D1C] text-sm font-medium transition-colors"
+        >
+          &larr; Back
+        </button>
+      </div>
+    </div>
   );
 }
