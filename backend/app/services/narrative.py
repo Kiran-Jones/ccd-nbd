@@ -164,7 +164,7 @@ For "interviewParagraph", target about 4-5 sentences and 60-140 words. Use a cla
                 {"role": "user", "content": user_prompt},
             ],
             temperature=0.7,
-            max_tokens=1500,
+            max_tokens=12000,
         )
 
         content = response.choices[0].message.content

@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     # Dartmouth Chat AI (OpenAI-compatible endpoint)
     dartmouth_ai_api_key: str = ""
     dartmouth_ai_base_url: str = "https://chat.dartmouth.edu/api"
-    dartmouth_ai_model: str = "openai.gpt-oss-120b"
+    dartmouth_ai_model: str = "vertex_ai.gemini-2.5-flash"
 
     # Rate limiting (per IP)
     rate_limit_default_max_requests: int = 60

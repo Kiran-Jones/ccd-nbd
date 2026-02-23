@@ -67,8 +67,10 @@ def _escape_newlines_in_strings(text: str) -> str:
     return "".join(result)
 
 
-def parse_llm_json(text: str) -> dict:
+def parse_llm_json(text: str | None) -> dict:
     """Extract and parse a JSON object from LLM output, handling common formatting issues."""
+    if not text:
+        raise ValueError("LLM returned empty content")
     text = extract_json(text)
     try:
         return json.loads(text)
