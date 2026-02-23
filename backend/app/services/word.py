@@ -1,46 +1,12 @@
-import json
 import logging
-import re
 from typing import List
 
 from openai import OpenAI
 
 from app.config.settings import settings
+from app.utils.llm_json import parse_llm_json
 
 logger = logging.getLogger(__name__)
-
-
-def _extract_json(text: str) -> str:
-    """Extract a JSON object from LLM output that may include code fences or trailing text."""
-    text = text.strip()
-    text = re.sub(r"^```(?:json)?\s*\n?", "", text)
-    text = re.sub(r"\n?```\s*$", "", text.strip())
-    start = text.find("{")
-    if start == -1:
-        return text
-    depth = 0
-    in_string = False
-    escape = False
-    for i in range(start, len(text)):
-        c = text[i]
-        if escape:
-            escape = False
-            continue
-        if c == "\\":
-            escape = True
-            continue
-        if c == '"':
-            in_string = not in_string
-            continue
-        if in_string:
-            continue
-        if c == "{":
-            depth += 1
-        elif c == "}":
-            depth -= 1
-            if depth == 0:
-                return text[start : i + 1]
-    return text[start:]
 
 
 class WordSuggestionService:
@@ -98,9 +64,7 @@ Distill the overall narrative into a single word."""
         content = response.choices[0].message.content
         logger.debug(f"AI word response: {content}")
 
-        content = _extract_json(content)
-
-        result = json.loads(content)
+        result = parse_llm_json(content)
         word = result.get("word", "").strip()
         if not word:
             return "Focus"
