@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from typing import List, Optional
 
 from openai import OpenAI
@@ -9,6 +10,41 @@ from app.config.settings import settings
 from app.models.analysis import AnalysisResult
 
 logger = logging.getLogger(__name__)
+
+
+def _extract_json(text: str) -> str:
+    """Extract a JSON object from LLM output that may include code fences or trailing text."""
+    text = text.strip()
+    # Strip markdown code fences
+    text = re.sub(r"^```(?:json)?\s*\n?", "", text)
+    text = re.sub(r"\n?```\s*$", "", text.strip())
+    # Find the outermost { ... } by brace matching
+    start = text.find("{")
+    if start == -1:
+        return text
+    depth = 0
+    in_string = False
+    escape = False
+    for i in range(start, len(text)):
+        c = text[i]
+        if escape:
+            escape = False
+            continue
+        if c == "\\":
+            escape = True
+            continue
+        if c == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start : i + 1]
+    return text[start:]
 
 
 class ExperienceSuggestion(BaseModel):
@@ -169,6 +205,9 @@ For "interviewParagraph", target about 4-5 sentences and 60-140 words. Use a cla
 
         content = response.choices[0].message.content
         logger.debug(f"AI response: {content}")
+
+        # Extract JSON object from response (handles code fences, trailing text)
+        content = _extract_json(content)
 
         result = json.loads(content)
         if isinstance(result.get("paragraph"), str):
