@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     # Dartmouth Chat AI (OpenAI-compatible endpoint)
     dartmouth_ai_api_key: str = ""
     dartmouth_ai_base_url: str = "https://chat.dartmouth.edu/api"
-    dartmouth_ai_model: str = "anthropic.claude-3-5-haiku-20241022"
+    dartmouth_ai_model: str = "anthropic.claude-haiku-4-5-20251001"
 
     # Rate limiting (per IP)
     rate_limit_default_max_requests: int = 60

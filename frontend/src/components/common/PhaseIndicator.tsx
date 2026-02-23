@@ -1,32 +1,22 @@
+import { useLocation } from "react-router-dom";
+
 const PHASE_COLORS = ["#366946", "#469B57", "#6FC37F", "#92D79F", "#B1E3BB"];
 
 const MILESTONE_IDS = ["intake", "resume", "categorize", "rewrite", "reflect"] as const;
 
-const milestoneByPhase: Record<string, (typeof MILESTONE_IDS)[number]> = {
-  welcome: "intake",
-  paragraph: "intake",
-  paragraphReview: "intake",
-  sentence: "intake",
-  sentenceReview: "intake",
-  word: "intake",
-  wordReview: "intake",
-  careerValue: "intake",
-  careerSkill: "intake",
-  careerStrength: "intake",
-  upload: "resume",
-  preview: "resume",
-  categorize: "categorize",
-  finalWord: "rewrite",
-  summary: "rewrite",
-  finalReflection: "reflect",
+const milestoneByPath: Record<string, (typeof MILESTONE_IDS)[number]> = {
+  "/": "intake",
+  "/intake": "intake",
+  "/resume": "resume",
+  "/categorize": "categorize",
+  "/final-word": "rewrite",
+  "/summary": "rewrite",
+  "/reflection": "reflect",
 };
 
-interface Props {
-  phase: string;
-}
-
-export default function PhaseIndicator({ phase }: Props) {
-  const milestoneId = milestoneByPhase[phase] ?? "intake";
+export default function PhaseIndicator() {
+  const location = useLocation();
+  const milestoneId = milestoneByPath[location.pathname] ?? "intake";
   const index = MILESTONE_IDS.indexOf(milestoneId);
   const color = PHASE_COLORS[index] ?? PHASE_COLORS[0];
 
